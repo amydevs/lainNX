@@ -23,11 +23,12 @@ export default {
         build: {
                 rollupOptions: {
                         input: {
-                                main: resolve(__dirname, 'index.html'),
-                                game: resolve(__dirname, 'game.html'),
-                                guide: resolve(__dirname, 'guide.html'),
-                                notes: resolve(__dirname, 'notes.html'),
+                                main: resolve(__dirname, 'src', "main.ts"),
+                        },
+                        output: {
+                                entryFileNames: "main.js"
                         }
-                }
+                },
+                outDir: "romfs"
         }
 };

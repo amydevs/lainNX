@@ -9,6 +9,8 @@
         "preview": "vite preview"
     },
     "devDependencies": {
+        "@nx.js/nro": "^1.0.0-beta.4",
+        "@nx.js/runtime": "^1.0.0-beta.4",
         "@types/three": "^0.162.0",
         "command-exists": "^1.2.9",
         "kaitai-struct": "^0.10.0",
