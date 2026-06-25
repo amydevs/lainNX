@@ -644,8 +644,8 @@ export function update_media_scene(media: MediaScene, ctx: SceneUpdateContext): 
                 .then(() => {
                     // since the endroll is just a video we need to remove the canvas cover
                     // it will get reset automatically once we return a new scene
-                    const canvas_el = document.getElementById("main-canvas")!;
-                    canvas_el.style.background = "none";
+                    // const canvas_el = document.getElementById("main-canvas")!;
+                    // canvas_el.style.background = "none";
 
                     media.is_viewing_endroll = true;
                     media.scene_group.visible = false;
@@ -675,7 +675,7 @@ export class MediaBackgroundImages extends Sprite2D {
         const textures: THREE.Texture[] = [];
         table_indices.forEach((image_index) => {
             if (image_index !== null) {
-                textures.push(load_texture(`/media-background-images/${site}/${image_index}.png`));
+                textures.push(load_texture(`${__ROOT_PATH__}/media-background-images/${site}/${image_index}.png`));
             }
         });
 

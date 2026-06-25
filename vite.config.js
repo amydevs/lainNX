@@ -1,11 +1,25 @@
+import packageJson from "./package.json";
 import gltf from "vite-plugin-gltf";
 import glsl from "vite-plugin-glsl";
 import { resolve } from 'path'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
+import base from "./vite-plugins/base";
+import nxjsConfig from "./vite-plugins/nxjs-config";
+
+
+const rootPath = `sdmc:/switch/${packageJson.name}`
+const assetsDirName = "assets";
 
 export default {
+        define: {
+                // to deal with gltf loader issues
+                "location.href": "undefined",
+                "__ROOT_PATH__": `"${rootPath}"`,
+        },
         plugins: [
-                gltf(),
+                gltf({
+                        publicPath: `${rootPath}/${assetsDirName}`,
+                }),
                 glsl(),
                 viteStaticCopy({
                         targets: [
@@ -18,16 +32,21 @@ export default {
                                         dest: 'json'
                                 }
                         ]
-                })
+                }),
+                base({ base: rootPath }),
+                nxjsConfig(),
         ],
         build: {
                 rollupOptions: {
                         input: {
-                                main: resolve(__dirname, 'index.html'),
-                                game: resolve(__dirname, 'game.html'),
-                                guide: resolve(__dirname, 'guide.html'),
-                                notes: resolve(__dirname, 'notes.html'),
+                                main: resolve(__dirname, 'src', "main.ts"),
+                        },
+                        output: {
+                                assetFileNames: `${assetsDirName}/[name][extname]`,
+                                chunkFileNames: '[name].js',
+                                entryFileNames: "[name].js"
                         }
-                }
+                },
+                sourcemap: true,
         }
 };

@@ -47,7 +47,7 @@ export function save_state(game_state: GameState, key: string = SAVE_KEY): void 
         },
     };
 
-    localStorage.setItem(key, JSON.stringify(json));
+    localStorage!.setItem(key, JSON.stringify(json));
 }
 
 function get_default_state(): GameState {
@@ -177,7 +177,7 @@ export function get_saved_state(): GetSavedStateResult {
     const default_save = get_default_state();
 
     try {
-        const save = localStorage.getItem(SAVE_KEY);
+        const save = localStorage!.getItem(SAVE_KEY);
 
         if (save === null || save === "null" || save === undefined || save.trim() === "") {
             return { saved_state: default_save, found_valid_save: false };
@@ -214,7 +214,7 @@ export function get_saved_state(): GetSavedStateResult {
 
 export function has_valid_save_state(): boolean {
     try {
-        const save = localStorage.getItem(SAVE_KEY);
+        const save = localStorage!.getItem(SAVE_KEY);
 
         if (save === null || save === undefined || save.trim() === "") {
             return false;
@@ -411,7 +411,7 @@ function is_valid_legacy_game_state(data: unknown): data is LegacyGameState {
 }
 
 export function check_if_legacy_save_and_upgrade(): void {
-    const legacy_save = localStorage.getItem(LEGACY_SAVE_KEY);
+    const legacy_save = localStorage!.getItem(LEGACY_SAVE_KEY);
     if (legacy_save === null) {
         return;
     }
@@ -428,6 +428,6 @@ export function check_if_legacy_save_and_upgrade(): void {
         console.error("failed to upgrade legacy save", e);
     }
 
-    localStorage.setItem(`_${LEGACY_SAVE_KEY}`, legacy_save);
-    localStorage.removeItem(LEGACY_SAVE_KEY);
+    localStorage!.setItem(`_${LEGACY_SAVE_KEY}`, legacy_save);
+    localStorage!.removeItem(LEGACY_SAVE_KEY);
 }
