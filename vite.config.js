@@ -4,8 +4,18 @@ import { resolve } from 'path'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 export default {
+        define: {
+                "location.href": "undefined"
+        },
         plugins: [
-                gltf(),
+                gltf({
+                        publicPath: 'romfs:',
+                        transforms: [
+                                (s) => {
+
+                                }
+                        ]
+                }),
                 glsl(),
                 viteStaticCopy({
                         targets: [
@@ -29,6 +39,7 @@ export default {
                                 entryFileNames: "main.js"
                         }
                 },
-                outDir: "romfs"
+                outDir: "romfs",
+                sourcemap: true,
         }
 };

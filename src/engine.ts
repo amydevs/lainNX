@@ -85,7 +85,7 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 export function get_user_language(): Language {
     const default_value = { name: "English", code: "en" };
 
-    const lang_code = localStorage.getItem(LANG_KEY);
+    const lang_code = localStorage!.getItem(LANG_KEY);
 
     if (lang_code === null) {
         return default_value;
@@ -167,7 +167,7 @@ export enum SFX {
 }
 
 type SFXStoreEntry = {
-    loaded_audio?: HTMLAudioElement;
+    loaded_audio?: Audio;
     filename: string;
 };
 
@@ -218,7 +218,7 @@ export function play_audio(sfx: SFX, loop = false): void {
 
     const entry = SFX_STORE[sfx];
 
-    entry.loaded_audio ??= new Audio(`/sfx/${entry.filename}.mp4`);
+    entry.loaded_audio ??= new Audio(`romfs:/sfx/${entry.filename}.mp4`);
     entry.loaded_audio.currentTime = 0;
     entry.loaded_audio.volume = 0.5;
     entry.loaded_audio.loop = loop;
@@ -246,13 +246,14 @@ function all_audio_loaded(): boolean {
 let AUDIO_ANALYSER: THREE.AudioAnalyser | null = null;
 
 export function get_audio_analyser(): THREE.AudioAnalyser {
+    // TODO: fix audio analyser
     if (AUDIO_ANALYSER === null) {
-        const media_el = get_media_element();
+        // const media_el = get_media_element();
 
         const listener = new THREE.AudioListener();
         const audio = new THREE.Audio(listener);
 
-        audio.setMediaElementSource(media_el);
+        // audio.setMediaElementSource(media_el);
 
         AUDIO_ANALYSER = new THREE.AudioAnalyser(audio, 2048);
     }
@@ -302,9 +303,8 @@ export function get_separate_texture(texture: Texture): THREE.CanvasTexture {
 
     const { x, y, w: width, h: height } = get_texture_dimensions(texture);
 
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
+    // TODO: check if this actually works
+    const canvas = new OffscreenCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
     if (!ctx) {
@@ -482,7 +482,7 @@ export function process_scene_events<T extends Scene>(scene: T, events: SceneEve
 }
 
 export function read_key_mappings(): Record<string, Key> {
-    const stored_mappings = localStorage.getItem(KEYBINDINGS_KEY);
+    const stored_mappings = localStorage!.getItem(KEYBINDINGS_KEY);
     if (stored_mappings) {
         try {
             const key_array = JSON.parse(stored_mappings);
@@ -531,22 +531,22 @@ export class Engine {
             pause_audio(SFX.Site_Theme);
         }
 
-        const media_el = document.getElementById("media")!;
-        if (scene.scene_kind === SceneKind.Media || scene.scene_kind === SceneKind.Idle) {
-            media_el.style.display = "block";
-        } else {
-            media_el.style.display = "none";
-        }
+        // const media_el = document.getElementById("media")!;
+        // if (scene.scene_kind === SceneKind.Media || scene.scene_kind === SceneKind.Idle) {
+        //     media_el.style.display = "block";
+        // } else {
+        //     media_el.style.display = "none";
+        // }
 
-        const canvas_el = document.getElementById("main-canvas")!;
-        if (
-            (scene.scene_kind === SceneKind.Media && !scene.is_audio_only) ||
-            (scene.scene_kind === SceneKind.Idle && scene.is_video())
-        ) {
-            canvas_el.style.background = "none";
-        } else {
-            canvas_el.style.background = "#000";
-        }
+        // const canvas_el = document.getElementById("main-canvas")!;
+        // if (
+        //     (scene.scene_kind === SceneKind.Media && !scene.is_audio_only) ||
+        //     (scene.scene_kind === SceneKind.Idle && scene.is_video())
+        // ) {
+        //     canvas_el.style.background = "none";
+        // } else {
+        //     canvas_el.style.background = "#000";
+        // }
 
         this.camera.updateProjectionMatrix();
     }
@@ -555,18 +555,18 @@ export class Engine {
         this.is_debug = is_debug;
         this.time_multiplier = 1;
 
-        this.size_modifier = parseFloat(localStorage.getItem(SIZE_MODIFIER_KEY) || "1");
+        this.size_modifier = parseFloat(localStorage!.getItem(SIZE_MODIFIER_KEY) || "1");
         this.size_modifier = isNaN(this.size_modifier) ? 1 : this.size_modifier;
 
         this.camera = new THREE.PerspectiveCamera(REGULAR_FOV, ASPECT_RATIO, NEAR, FAR);
 
-        this.renderer = new THREE.WebGLRenderer({ alpha: true });
-        this.renderer.setSize(W * this.size_modifier, H * this.size_modifier);
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: screen,
+            alpha: true
+        });
         this.renderer.toneMapping = THREE.NoToneMapping;
         this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.domElement.id = "main-canvas";
-        document.getElementById("game-container")!.appendChild(this.renderer.domElement);
+        // this.renderer.setPixelRatio(window.devicePixelRatio);
 
         if (this.is_debug) {
             this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -610,14 +610,14 @@ export class Engine {
             this.size_modifier *= modifier;
             this.renderer.setSize(W * this.size_modifier, H * this.size_modifier);
 
-            localStorage.setItem(SIZE_MODIFIER_KEY, `${this.size_modifier}`);
+            localStorage!.setItem(SIZE_MODIFIER_KEY, `${this.size_modifier}`);
         }
 
         if (this.pressed_keys.has("j")) {
             this.size_modifier /= modifier;
             this.renderer.setSize(W * this.size_modifier, H * this.size_modifier);
 
-            localStorage.setItem(SIZE_MODIFIER_KEY, `${this.size_modifier}`);
+            localStorage!.setItem(SIZE_MODIFIER_KEY, `${this.size_modifier}`);
         }
     }
 
@@ -633,8 +633,8 @@ export class Engine {
             if (all_gltfs_loaded() && all_lapks_loaded() && all_audio_loaded()) {
                 this.set_scene(new BootScene(time_ctx.time));
 
-                document.getElementById("loading")!.style.display = "none";
-                document.getElementById("game-container")!.style.border = "1px solid white";
+                // document.getElementById("loading")!.style.display = "none";
+                // document.getElementById("game-container")!.style.border = "1px solid white";
             }
         } else {
             if (this.is_debug) {
@@ -792,9 +792,9 @@ export async function engine_create(): Promise<Engine> {
 
     // preload audio
     SFX_STORE.forEach((entry) => {
-        const audio = new Audio(`/sfx/${entry.filename}.mp4`);
+        const audio = new Audio(`romfs:/sfx/${entry.filename}.mp4`);
 
-        audio.preload = "auto";
+        // audio.preload = "auto";
 
         audio.addEventListener("canplaythrough", () => {
             entry.loaded_audio = audio;
