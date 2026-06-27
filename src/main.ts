@@ -5,12 +5,18 @@ import { SiteScene } from "./site";
 // nx setup stuff
 // polyfill for threejs gltfloader
 Object.defineProperty(globalThis, "self", {
-  value: window,
-  writable: false,
-  enumerable: true,
-  configurable: false,
+    value: window,
+    writable: false,
+    configurable: false,
+    enumerable: true,
 });
-// polyfill for three.js audio stuff
+// polyfill for three.js audio and video stuff
+Object.defineProperty(window, "HTMLVideoElement", {
+    value: Video,
+    writable: false,
+    configurable: false,
+    enumerable: true,
+});
 Object.defineProperty(window, "HTMLAudioElement", {
     value: Audio,
     writable: false,
@@ -21,9 +27,9 @@ Object.defineProperty(window, "HTMLAudioElement", {
 for (const k of ["log", "warn", "info", "error", "debug"]) {
     Object.defineProperty(console, k, {
         value: console.debug.bind(console, `[${k.toUpperCase()}]`),
-        enumerable: true,
-        configurable: false,
         writable: false,
+        configurable: false,
+        enumerable: true,
     });
 }
 // save file initialization
@@ -45,8 +51,7 @@ function update_controls(engine: Engine) {
             const is_repeat_pressed = engine.pressed_keys.has(i_str);
             if (!is_repeat_pressed && button.pressed) {
                 engine.pressed_keys.add(i_str);
-            }
-            else if (is_repeat_pressed && !button.pressed) {
+            } else if (is_repeat_pressed && !button.pressed) {
                 engine.pressed_keys.delete(i_str);
             }
             const psx_key = engine.key_mappings[i];

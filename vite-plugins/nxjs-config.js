@@ -3,7 +3,9 @@ import * as path from "node:path";
 
 const nxjsConfig = () => ({
     closeBundle() {
-        fs.cpSync(path.join(process.cwd(), "nxjs.ini"), path.join("romfs", "nxjs.ini"));
+        for (const file of ["nxjs.ini", "loading.jpg"]) {
+            fs.cpSync(path.join(process.cwd(), file), path.join("romfs", file));
+        }
     }
 })
 
