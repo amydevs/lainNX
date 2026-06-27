@@ -154,6 +154,7 @@ export class IdleScene extends THREE.Scene {
 
         const { site_kind } = enter_location;
 
+        // TODO: figure out what is wrong with the audio idle scenes
         if (Math.random() < 0.5) {
             const { media_file, name, image_table_indices, id } = get_random_idle_audio_media(site_kind);
 
