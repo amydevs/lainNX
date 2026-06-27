@@ -8,6 +8,7 @@ import nxjsConfig from "./vite-plugins/nxjs-config";
 
 
 const rootPath = `sdmc:/switch/${packageJson.name}`
+const assetsDirName = "assets";
 
 export default {
         define: {
@@ -17,7 +18,7 @@ export default {
         },
         plugins: [
                 gltf({
-                        publicPath: rootPath,
+                        publicPath: `${rootPath}/${assetsDirName}`,
                 }),
                 glsl(),
                 viteStaticCopy({
@@ -41,7 +42,7 @@ export default {
                                 main: resolve(__dirname, 'src', "main.ts"),
                         },
                         output: {
-                                assetFileNames: 'assets/[name][extname]',
+                                assetFileNames: `${assetsDirName}/[name][extname]`,
                                 chunkFileNames: '[name].js',
                                 entryFileNames: "[name].js"
                         }

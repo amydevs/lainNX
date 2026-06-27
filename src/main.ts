@@ -49,6 +49,7 @@ localStorage!.setItem("lastOpened", Date.now().toString());
         animation_id = requestAnimationFrame(animate);
 
         const current_time = performance.now() - time_paused;
+        console.debug(`animate() called, ${current_time}`);
 
         if (last_time === 0) {
             last_time = current_time;

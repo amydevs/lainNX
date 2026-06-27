@@ -675,7 +675,7 @@ export class MediaBackgroundImages extends Sprite2D {
         const textures: THREE.Texture[] = [];
         table_indices.forEach((image_index) => {
             if (image_index !== null) {
-                textures.push(load_texture(`/media-background-images/${site}/${image_index}.png`));
+                textures.push(load_texture(`${__ROOT_PATH__}/media-background-images/${site}/${image_index}.png`));
             }
         });
 

@@ -732,9 +732,13 @@ export async function engine_create(): Promise<Engine> {
 
     // start loading GLTF models
     GLTFS_TO_LOAD.forEach((model, i) => {
-        GLTF_LOADER.loadAsync(model).then((gltf) => {
+        GLTF_LOADER.load(model, (gltf) => {
             LOADED_GLTFS[i] = gltf;
-        });
+        }, (e) => {
+            console.debug(`Progress for ${model}: ${e}`);
+        }, (err) => {
+            console.error(`Error loading ${model}: ${err}`);
+        })
     });
 
     // start loading LAPKS
