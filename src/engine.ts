@@ -697,8 +697,8 @@ export class Engine {
             if (new_scene) {
                 this.set_scene(new_scene);
             } else {
-                this.renderer.render(this.scene, this.camera);
                 update_video_texture(this.camera);
+                this.renderer.render(this.scene, this.camera);
             }
 
             // TODO: debug orbit controls
