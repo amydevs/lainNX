@@ -1,4 +1,3 @@
-import { FsSaveDataType } from "@nx.js/constants";
 import { type Engine, engine_create, get_user_language, read_key_mappings, SceneKind } from "./engine";
 import { check_if_legacy_save_and_upgrade } from "./save";
 import { SiteScene } from "./site";
