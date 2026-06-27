@@ -731,14 +731,15 @@ export async function engine_create(): Promise<Engine> {
     LOADED_TEXTURES.push(atlas);
 
     // start loading GLTF models
-    GLTFS_TO_LOAD.forEach((model, i) => {
-        GLTF_LOADER.load(model, (gltf) => {
+    GLTFS_TO_LOAD.forEach(async (model, i) => {
+        try {
+            const response = await fetch(model);
+            const arrayBuffer = await response.arrayBuffer();
+            const gltf = await GLTF_LOADER.parseAsync(arrayBuffer, model);
             LOADED_GLTFS[i] = gltf;
-        }, (e) => {
-            console.debug(`Progress for ${model}: ${e}`);
-        }, (err) => {
-            console.error(`Error loading ${model}: ${err}`);
-        })
+        } catch (error) {
+            console.error(`Error loading GLTF model ${model}:`, error);
+        }
     });
 
     // start loading LAPKS
