@@ -5,7 +5,6 @@ import { resolve } from 'path'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 import basePlugin from "./vite-plugins/base";
 
-
 const rootPath = `sdmc:/switch/${packageJson.name}`
 
 export default {
@@ -42,7 +41,6 @@ export default {
                                 entryFileNames: "main.js"
                         }
                 },
-                outDir: "romfs",
                 sourcemap: true,
         }
 };
