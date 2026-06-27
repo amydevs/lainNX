@@ -5,19 +5,19 @@ export function get_media_element(): HTMLMediaElement {
 }
 
 export function get_audio_media_file_path(media_file: string): string {
-    return `/media/audio/${media_file}.mp4`;
+    return `${__ROOT_PATH__}/media/audio/${media_file}.mp4`;
 }
 
 export function get_video_media_file_path(media_file: string): string {
-    return `/media/movie/${media_file}.mp4`;
+    return `${__ROOT_PATH__}/media/movie/${media_file}.mp4`;
 }
 
 export function get_track_path(node_name: string): string {
-    return `/webvtt/${get_user_language().code}/${node_name}.vtt`;
+    return `${__ROOT_PATH__}/webvtt/${get_user_language().code}/${node_name}.vtt`;
 }
 
 export function get_voice_syllable_path(syllable: string): string {
-    return `/voice/${syllable}.mp4`;
+    return `${__ROOT_PATH__}/voice/${syllable}.mp4`;
 }
 
 export class MediaPlayer {
