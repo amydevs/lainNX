@@ -14,6 +14,7 @@ import { LainTalk, LainTalkAnimationKind } from "./lain";
 import {
     get_audio_media_file_path,
     get_track_path,
+    get_video_mesh,
     get_voice_syllable_path,
     MediaPlayer,
 } from "./media_player";
@@ -351,7 +352,8 @@ export class EndScene extends THREE.Scene {
             this.lain,
             create_point_light({ intensity: 8, position: vec3(0, 0, 1) }),
             this.back_light,
-            this.selection
+            this.selection,
+            get_video_mesh()
         );
     }
 }

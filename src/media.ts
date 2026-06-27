@@ -38,6 +38,7 @@ import {
     get_audio_media_file_path,
     get_track_path,
     get_video_media_file_path,
+    get_video_mesh,
     MediaPlayer,
 } from "./media_player";
 import { Progress, save_state } from "./save";
@@ -635,8 +636,9 @@ export function update_media_scene(media: MediaScene, ctx: SceneUpdateContext): 
 
             return { new_scene: new EndScene(media.player_name, time_ctx.time) };
         } else if (media.node.triggers_final_video) {
-            const prev_src = media.player.media_el.src;
-            const prev_track_src = media.player.track_el.src;
+            const prev_src = media.player.video.src;
+            // TODO: re-enable subtitle support
+            // const prev_track_src = media.player.track_el.src;
 
             media.player.load(get_video_media_file_path("ENDROLL1.STR[0]"), get_track_path("Endroll"));
             media.player
@@ -651,7 +653,7 @@ export function update_media_scene(media: MediaScene, ctx: SceneUpdateContext): 
                     media.scene_group.visible = false;
                 })
                 .catch((err) => {
-                    media.player.load(prev_src, prev_track_src);
+                    // media.player.load(prev_src, prev_track_src);
                     media.player.log_error(err);
                 });
         }
@@ -837,6 +839,7 @@ export class MediaScene extends THREE.Scene {
             group.add(this.lof_icon, ...this.audio_visualizer_columns, this.images);
         } else {
             this.player = new MediaPlayer(get_video_media_file_path(node.media_file), track_path);
+            this.add(get_video_mesh());
 
             this.words = null;
             this.images = null;

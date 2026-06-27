@@ -45,7 +45,6 @@ import { MediaScene, update_media_scene } from "./media";
 import { ChangeSiteScene, update_change_site_scene } from "./change_site";
 import { PolytanScene, update_polytan_scene } from "./polytan";
 import { EndScene, update_end_scene } from "./end";
-import { get_media_element } from "./media_player";
 import { DebugScene, handle_additional_debug_keys, update_debug_scene } from "./debug";
 import { IdleScene, update_idle_scene } from "./idle";
 import { get_saved_state, GameState } from "./save";
@@ -304,7 +303,6 @@ export function get_separate_texture(texture: Texture): THREE.CanvasTexture {
 
     const { x, y, w: width, h: height } = get_texture_dimensions(texture);
 
-    // TODO: check if this actually works
     const canvas = new OffscreenCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
