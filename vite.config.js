@@ -1,32 +1,12 @@
-import * as path from "node:path";
+import packageJson from "./package.json";
 import gltf from "vite-plugin-gltf";
 import glsl from "vite-plugin-glsl";
 import { resolve } from 'path'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
+import basePlugin from "./vite-plugins/base";
 
-const rootPath = "romfs:"
-const basePlugin = ({ base }) => {
-        const tempBase = "/DO_NOT_USE_BASE_PATH";
-        return {
-                name: 'base-plugin',
-                config(config) {
-                        return {
-                                base: tempBase,
-                        }
-                },
-                generateBundle(options, bundle) {
-                        for (const file of Object.values(bundle)) {
-                                console.log(file.type)
-                                if (file.type === 'chunk') {
-                                        file.code = file.code.replaceAll(tempBase, base);
-                                }
-                                else if (file.type === 'asset' && typeof file.source === 'string') {
-                                        file.source = file.source.replaceAll(tempBase, base);
-                                }
-                        }
-                }
-        }
-}
+
+const rootPath = `sdmc:/switch/${packageJson.name}`
 
 export default {
         define: {
