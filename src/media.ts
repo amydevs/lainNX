@@ -636,8 +636,8 @@ export function update_media_scene(media: MediaScene, ctx: SceneUpdateContext): 
 
             return { new_scene: new EndScene(media.player_name, time_ctx.time) };
         } else if (media.node.triggers_final_video) {
-            const prev_src = media.player.video.src;
             // TODO: re-enable subtitle support
+            // const prev_src = media.player.video.src;
             // const prev_track_src = media.player.track_el.src;
 
             media.player.load(get_video_media_file_path("ENDROLL1.STR[0]"), get_track_path("Endroll"));

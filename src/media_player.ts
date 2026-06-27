@@ -102,7 +102,7 @@ export class MediaPlayer {
         // this.subtitle_el.style.visibility = "hidden";
     }
 
-    handle_cue_change(event: any): void {
+    handle_cue_change(_event: any): void {
         // const track = event.target;
         // const { activeCues } = track;
         // if (activeCues && activeCues.length > 0) {
