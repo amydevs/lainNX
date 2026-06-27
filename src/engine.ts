@@ -51,7 +51,7 @@ import { IdleScene, update_idle_scene } from "./idle";
 import { get_saved_state, GameState } from "./save";
 import { TaKScene, update_tak_scene } from "./tak";
 import { LoadingScene, update_loading_scene } from "./loading";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Button } from '@nx.js/constants';
 
 const W = 800;
 const H = 600;
@@ -492,20 +492,20 @@ export function read_key_mappings(): Record<string, Key> {
     }
 
     return {
-        arrowdown: Key.Down,
-        arrowleft: Key.Left,
-        arrowup: Key.Up,
-        arrowright: Key.Right,
-        x: Key.Circle,
-        z: Key.Cross,
-        d: Key.Triangle,
-        s: Key.Square,
-        q: Key.R2,
-        e: Key.L2,
-        w: Key.L1,
-        r: Key.R1,
-        v: Key.Start,
-        c: Key.Select,
+        [Button.Down]: Key.Down,
+        [Button.Left]: Key.Left,
+        [Button.Up]: Key.Up,
+        [Button.Right]: Key.Right,
+        [Button.A]: Key.Circle,
+        [Button.B]: Key.Cross,
+        [Button.X]: Key.Triangle,
+        [Button.Y]: Key.Square,
+        [Button.ZR]: Key.R2,
+        [Button.ZL]: Key.L2,
+        [Button.L]: Key.L1,
+        [Button.R]: Key.R1,
+        [Button.Plus]: Key.Start,
+        [Button.Minus]: Key.Select,
     };
 }
 
@@ -520,7 +520,7 @@ export class Engine {
     time_multiplier: number;
     is_debug: boolean;
     size_modifier: number;
-    controls: OrbitControls | null;
+    // controls: OrbitControls | null;
 
     set_scene(scene: Scene) {
         this.scene = scene;
@@ -569,12 +569,13 @@ export class Engine {
         this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
         // this.renderer.setPixelRatio(window.devicePixelRatio);
 
-        if (this.is_debug) {
-            this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-            this.controls.target.set(0, 0, -1);
-        } else {
-            this.controls = null;
-        }
+        // TODO: debug orbit controls
+        // if (this.is_debug) {
+        //     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        //     this.controls.target.set(0, 0, -1);
+        // } else {
+        //     this.controls = null;
+        // }
 
         this.game_state = get_saved_state().saved_state;
 
@@ -700,9 +701,10 @@ export class Engine {
                 this.renderer.render(this.scene, this.camera);
             }
 
-            if (this.controls) {
-                this.controls.update();
-            }
+            // TODO: debug orbit controls
+            // if (this.controls) {
+            //     this.controls.update();
+            // }
 
             this.key_states.fill(false);
         }

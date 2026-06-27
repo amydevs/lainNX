@@ -1,15 +1,17 @@
 import { FsSaveDataType } from "@nx.js/constants";
-import { engine_create, get_user_language, read_key_mappings, SceneKind } from "./engine";
+import { type Engine, engine_create, get_user_language, read_key_mappings, SceneKind } from "./engine";
 import { check_if_legacy_save_and_upgrade } from "./save";
 import { SiteScene } from "./site";
 
 // nx setup stuff
+// polyfill for three.js audio stuff
 Object.defineProperty(window, "HTMLAudioElement", {
     value: Audio,
     writable: false,
     configurable: false,
     enumerable: true,
 });
+// polyfill for console methods
 for (const k of ["log", "warn", "info", "error", "debug"]) {
     Object.defineProperty(console, k, {
         value: console.debug.bind(console, `[${k.toUpperCase()}]`),
@@ -18,6 +20,7 @@ for (const k of ["log", "warn", "info", "error", "debug"]) {
         writable: false,
     });
 }
+// save file initialization
 console.debug(`Application: ${Switch.Application.self.id}`);
 let profile = Switch.Profile.current;
 while (profile == null) {
@@ -25,10 +28,28 @@ while (profile == null) {
 }
 Switch.Profile.current = profile;
 console.debug(`${profile.nickname}: ${profile.uid[0]}.${profile.uid[1]}`);
-const lastOpened = localStorage!.getItem("lastOpened");
-const lastOpenedString = lastOpened ? new Date(Number(lastOpened)) : 'never';
-console.debug(`App last opened: ${lastOpenedString}`);
-localStorage!.setItem("lastOpened", Date.now().toString());
+// control handling
+function update_controls(engine: Engine) {
+    const pads = navigator.getGamepads();
+    const player_one = pads[0];
+    if (player_one) {
+        // Handle gamepad controls
+        for (const [i, button] of player_one.buttons.entries()) {
+            const i_str = i.toString();
+            const is_repeat_pressed = engine.pressed_keys.has(i_str);
+            if (!is_repeat_pressed && button.pressed) {
+                engine.pressed_keys.add(i_str);
+            }
+            else if (is_repeat_pressed && !button.pressed) {
+                engine.pressed_keys.delete(i_str);
+            }
+            const psx_key = engine.key_mappings[i];
+            if (psx_key != null && !is_repeat_pressed && button.pressed) {
+                engine.key_states[psx_key] = true;
+            }
+        }
+    }
+}
 
 (async () => {
     check_if_legacy_save_and_upgrade();
@@ -49,7 +70,6 @@ localStorage!.setItem("lastOpened", Date.now().toString());
         animation_id = requestAnimationFrame(animate);
 
         const current_time = performance.now() - time_paused;
-        console.debug(`animate() called, ${current_time}`);
 
         if (last_time === 0) {
             last_time = current_time;
@@ -57,42 +77,11 @@ localStorage!.setItem("lastOpened", Date.now().toString());
 
         const delta = (current_time - last_time) / 1000;
 
+        update_controls(engine);
         engine.update(current_time, delta);
 
         last_time = current_time;
     }
-
-    // window.addEventListener(
-    //     "keydown",
-    //     (event: KeyboardEvent) => {
-    //         if (event.repeat || event.ctrlKey) {
-    //             return;
-    //         }
-
-    //         const key = event.key.toLowerCase();
-    //         if (key in engine.key_mappings) {
-    //             const psx_key = engine.key_mappings[key];
-    //             engine.key_states[psx_key] = true;
-    //         }
-
-    //         engine.pressed_keys.add(event.key);
-    //     },
-    //     false
-    // );
-
-    // window.addEventListener(
-    //     "keyup",
-    //     (event: KeyboardEvent) => {
-    //         const key = event.key.toLowerCase();
-    //         if (key in engine.key_mappings) {
-    //             const psx_key = engine.key_mappings[key];
-    //             engine.key_states[psx_key] = false;
-    //         }
-
-    //         engine.pressed_keys.delete(event.key);
-    //     },
-    //     false
-    // );
 
     // window.addEventListener("updatekeybindings", (_: Event) => {
     //     engine.key_mappings = read_key_mappings();
