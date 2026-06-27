@@ -2,6 +2,15 @@ import * as THREE from "three";
 import { get_user_language } from "./engine";
 
 const video = new Video();
+let should_video_rerender = false;
+const enable_rerender_cb = () => should_video_rerender = true;
+const disable_rerender_cb = () => should_video_rerender = false;
+for (const event of ["loadedmetadata", "canplay", "play"]) {
+    video.addEventListener(event, enable_rerender_cb);
+}
+for (const event of ["pause", "ended"]) {
+    video.addEventListener(event, disable_rerender_cb);
+}
 const canvas = new OffscreenCanvas(320, 240);
 const canvas_ctx = canvas.getContext("2d");
 const canvas_texture = new THREE.CanvasTexture(canvas);
@@ -25,6 +34,9 @@ export function get_video_mesh(): THREE.Mesh {
 }
 
 export function update_video_texture(camera: THREE.PerspectiveCamera): void {
+    if (!should_video_rerender) {
+        return;
+    }
     console.debug(`updating video texture: ${video.src}`);
     const height = 40;
     const width = height * camera.aspect;
