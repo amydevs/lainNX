@@ -183,17 +183,18 @@ function get_lain_talk_animation_frame(kind: LainTalkAnimationKind, frame_number
     return get_talk_lapk(lain_talk_animations_json[kind][frame_number]);
 }
 
-function get_lain_talk_frame_for_rms(rms: number): THREE.Texture {
-    if (rms >= 130) {
-        return get_talk_lapk(0);
-    } else if (rms >= 129 && rms <= 130) {
-        return get_talk_lapk(33);
-    } else if (rms > 128 && rms <= 129) {
-        return get_talk_lapk(32);
-    } else {
-        return get_talk_lapk(31);
-    }
-}
+// TODO: audio analyser
+// function get_lain_talk_frame_for_rms(rms: number): THREE.Texture {
+//     if (rms >= 130) {
+//         return get_talk_lapk(0);
+//     } else if (rms >= 129 && rms <= 130) {
+//         return get_talk_lapk(33);
+//     } else if (rms > 128 && rms <= 129) {
+//         return get_talk_lapk(32);
+//     } else {
+//         return get_talk_lapk(31);
+//     }
+// }
 
 type LainTalkUpdateResult = {
     finished_animation: LainTalkAnimationKind | null;

@@ -1,6 +1,5 @@
-import { type Engine, engine_create, get_user_language, read_key_mappings, SceneKind } from "./engine";
+import { type Engine, engine_create } from "./engine";
 import { check_if_legacy_save_and_upgrade } from "./save";
-import { SiteScene } from "./site";
 
 // nx setup stuff
 // polyfill for threejs gltfloader
@@ -69,9 +68,9 @@ window.addEventListener("beforeunload", (event) => {
     check_if_legacy_save_and_upgrade();
 
     let is_page_visible = true;
-    let animation_id: number;
+    // let animation_id: number;
     let last_time = 0;
-    let pause_time = 0;
+    // let pause_time = 0;
     let time_paused = 0;
 
     const engine = await engine_create();
@@ -81,7 +80,9 @@ window.addEventListener("beforeunload", (event) => {
             return;
         }
 
-        animation_id = requestAnimationFrame(animate);
+        // TODO: emote wheel
+        // animation_id = requestAnimationFrame(animate);
+        requestAnimationFrame(animate);
 
         const current_time = performance.now() - time_paused;
 
