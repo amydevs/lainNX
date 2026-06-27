@@ -51,6 +51,7 @@ import { get_saved_state, GameState } from "./save";
 import { TaKScene, update_tak_scene } from "./tak";
 import { LoadingScene, update_loading_scene } from "./loading";
 import { Button } from '@nx.js/constants';
+import { update_video_texture } from "./media_player";
 
 const W = 800;
 const H = 600;
@@ -242,37 +243,37 @@ function all_audio_loaded(): boolean {
     return DID_AUDIO_SAFE_FAIL || SFX_STORE.every((e) => e.loaded_audio);
 }
 
-let AUDIO_ANALYSER: THREE.AudioAnalyser | null = null;
+// TODO: fix audio analyser
+// let AUDIO_ANALYSER: THREE.AudioAnalyser | null = null;
 
-export function get_audio_analyser(): THREE.AudioAnalyser {
-    // TODO: fix audio analyser
-    if (AUDIO_ANALYSER === null) {
-        // const media_el = get_media_element();
+// export function get_audio_analyser(): THREE.AudioAnalyser {
+//     if (AUDIO_ANALYSER === null) {
+//         // const media_el = get_media_element();
 
-        const listener = new THREE.AudioListener();
-        const audio = new THREE.Audio(listener);
+//         const listener = new THREE.AudioListener();
+//         const audio = new THREE.Audio(listener);
 
-        // audio.setMediaElementSource(media_el);
+//         // audio.setMediaElementSource(media_el);
 
-        AUDIO_ANALYSER = new THREE.AudioAnalyser(audio, 2048);
-    }
+//         AUDIO_ANALYSER = new THREE.AudioAnalyser(audio, 2048);
+//     }
 
-    return AUDIO_ANALYSER;
-}
+//     return AUDIO_ANALYSER;
+// }
 
-export function get_audio_analyser_rms(): number {
-    const analyser = get_audio_analyser();
+// export function get_audio_analyser_rms(): number {
+//     const analyser = get_audio_analyser();
 
-    const buffer = new Uint8Array(analyser.analyser.fftSize / 2);
-    analyser.analyser.getByteTimeDomainData(buffer);
+//     const buffer = new Uint8Array(analyser.analyser.fftSize / 2);
+//     analyser.analyser.getByteTimeDomainData(buffer);
 
-    let rms = 0;
-    for (let i = 0; i < buffer.length; i++) {
-        rms += buffer[i] * buffer[i];
-    }
+//     let rms = 0;
+//     for (let i = 0; i < buffer.length; i++) {
+//         rms += buffer[i] * buffer[i];
+//     }
 
-    return Math.sqrt(rms / buffer.length);
-}
+//     return Math.sqrt(rms / buffer.length);
+// }
 
 // texture globals
 export type TextureDimensions = {
@@ -697,6 +698,7 @@ export class Engine {
                 this.set_scene(new_scene);
             } else {
                 this.renderer.render(this.scene, this.camera);
+                update_video_texture();
             }
 
             // TODO: debug orbit controls

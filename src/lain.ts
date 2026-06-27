@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import lain_animations_json from "./static/json/lain_animations.json";
 import lain_talk_animations_json from "./static/json/lain_talk_animations.json";
-import { get_audio_analyser_rms, get_lapk, get_talk_lapk, TimeContext } from "./engine";
+import { get_lapk, get_talk_lapk, TimeContext } from "./engine";
 import { random_from, secs_to_ms } from "./util";
 import { Sprite2D, Vec3 } from "./objects";
 
@@ -256,7 +256,8 @@ export class LainTalk extends Sprite2D {
                 }
                 break;
             case LainTalkAnimationKind.None:
-                this.material.map = get_lain_talk_frame_for_rms(get_audio_analyser_rms());
+                // TODO: audio analyser
+                // this.material.map = get_lain_talk_frame_for_rms(get_audio_analyser_rms());
                 break;
         }
 
