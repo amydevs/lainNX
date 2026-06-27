@@ -37,6 +37,7 @@ export default {
                 nxjsConfig(),
         ],
         build: {
+                target: "ES2022",
                 rollupOptions: {
                         input: {
                                 main: resolve(__dirname, 'src', "main.ts"),
