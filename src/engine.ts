@@ -50,7 +50,7 @@ import { IdleScene, update_idle_scene } from "./idle";
 import { get_saved_state, GameState } from "./save";
 import { TaKScene, update_tak_scene } from "./tak";
 import { LoadingScene, update_loading_scene } from "./loading";
-import { Button } from '@nx.js/constants';
+import { Button } from "@nx.js/constants";
 import { update_video_texture } from "./media_player";
 
 const W = 800;
@@ -698,6 +698,14 @@ export class Engine {
                 this.set_scene(new_scene);
             } else {
                 update_video_texture(this.camera);
+                // TODO: enable disable scissoring
+                const w = screen.height * ASPECT_RATIO;
+                const h = screen.height;
+                const x = (screen.width - w) / 2;
+                const y = (screen.height - h) / 2;
+                this.renderer.setViewport(x, y, w, h);
+                this.renderer.setScissor(x, y, w, h);
+                this.renderer.setScissorTest(true);
                 this.renderer.render(this.scene, this.camera);
             }
 
