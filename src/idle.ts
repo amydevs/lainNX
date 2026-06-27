@@ -2,6 +2,7 @@ import {
     get_audio_media_file_path,
     get_track_path,
     get_video_media_file_path,
+    get_video_mesh,
     MediaPlayer,
 } from "./media_player";
 import * as THREE from "three";
@@ -158,7 +159,7 @@ export class IdleScene extends THREE.Scene {
 
             this.media_player = new MediaPlayer(get_audio_media_file_path(media_file), get_track_path(name));
             this.images = new MediaBackgroundImages(image_table_indices, site_kind, -6);
-            this.add(this.images);
+            this.add(this.images, get_video_mesh());
 
             this.node_id = id;
         } else {
