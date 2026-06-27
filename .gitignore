@@ -19,5 +19,5 @@ src/static/json/sprite_atlas.json
 src/textures.ts
 /dist
 /romfs
-/laintsx
+/LainNX
 *.nro
