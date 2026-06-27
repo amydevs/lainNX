@@ -4,13 +4,21 @@ import { check_if_legacy_save_and_upgrade } from "./save";
 import { SiteScene } from "./site";
 
 // nx setup stuff
-console.debug(`Application: ${Switch.Application.self.id}`);
 Object.defineProperty(window, "HTMLAudioElement", {
     value: Audio,
     writable: false,
     configurable: false,
     enumerable: true,
 });
+for (const k of ["log", "warn", "info", "error", "debug"]) {
+    Object.defineProperty(console, k, {
+        value: console.debug.bind(console, `[${k.toUpperCase()}]`),
+        enumerable: true,
+        configurable: false,
+        writable: false,
+    });
+}
+console.debug(`Application: ${Switch.Application.self.id}`);
 let profile = Switch.Profile.current;
 while (profile == null) {
     profile = Switch.Profile.select();
