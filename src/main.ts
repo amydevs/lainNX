@@ -4,6 +4,13 @@ import { check_if_legacy_save_and_upgrade } from "./save";
 import { SiteScene } from "./site";
 
 // nx setup stuff
+// polyfill for threejs gltfloader
+Object.defineProperty(globalThis, "self", {
+  value: window,
+  writable: false,
+  enumerable: true,
+  configurable: false,
+});
 // polyfill for three.js audio stuff
 Object.defineProperty(window, "HTMLAudioElement", {
     value: Audio,
