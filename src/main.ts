@@ -50,6 +50,9 @@ function update_controls(engine: Engine) {
         }
     }
 }
+window.addEventListener("beforeunload", (event) => {
+    event.preventDefault();
+});
 
 (async () => {
     check_if_legacy_save_and_upgrade();
