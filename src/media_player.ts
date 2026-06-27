@@ -39,9 +39,9 @@ export function update_video_texture(camera: THREE.PerspectiveCamera): void {
     }
     const height = 40;
     const width = height * camera.aspect;
-    const face_z = (height / 2) / Math.tan((camera.fov / 2) * Math.PI / 180);
+    const face_z = height / 2 / Math.tan(((camera.fov / 2) * Math.PI) / 180);
     const depth = 2 * (face_z - camera.position.z) * -1;
-    video_mesh.scale.set(width, height, depth)
+    video_mesh.scale.set(width, height, depth);
     canvas_ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas_texture.needsUpdate = true;
 }
@@ -64,6 +64,7 @@ export function get_voice_syllable_path(syllable: string): string {
 
 export class MediaPlayer {
     video: Video;
+    video_can_play_promise: Promise<void> | null;
     // TODO: re-enable subtitle support
     // track_el: HTMLTrackElement;
     // subtitle_el: HTMLParagraphElement;
@@ -72,6 +73,7 @@ export class MediaPlayer {
 
     constructor(media_src?: string, track_src?: string) {
         this.video = video;
+        this.video_can_play_promise = null;
 
         // this.track_el = document.getElementById("track") as HTMLTrackElement;
         // this.subtitle_el = document.getElementById("subtitle") as HTMLParagraphElement;
@@ -123,6 +125,25 @@ export class MediaPlayer {
         //     this.subtitle_el.textContent = "";
         // }
 
+        this.video_can_play_promise = new Promise((resolve, reject) => {
+            const can_play_cb = () => {
+                this.video.removeEventListener("canplay", can_play_cb);
+                resolve();
+            };
+            this.video.addEventListener("canplay", can_play_cb, { once: true });
+            const error_cb = (e: unknown) => {
+                this.video.removeEventListener("error", error_cb);
+                reject(e);
+            };
+            this.video.addEventListener("error", error_cb, { once: true });
+            // TODO: find a better way of getting around idle scenes not being able to play due to
+            // immediately playing after loading. This is a hacky solution that waits 200ms before resolving the promise.
+            setTimeout(() => {
+                this.video.removeEventListener("canplay", can_play_cb);
+                this.video.removeEventListener("error", error_cb);
+                resolve();
+            }, 200);
+        });
         this.video.src = media_src;
         this.video.load();
         this.reset_and_pause();
@@ -139,9 +160,10 @@ export class MediaPlayer {
         // this.video_si.appendChild(this.track_el);
     }
 
-    play(): Promise<void> {
+    async play(): Promise<void> {
         // this.subtitle_el.style.visibility = "visible";
-        return this.video.play();
+        await this.video_can_play_promise!;
+        return await this.video.play();
     }
 
     get_elapsed_percentage(): number {
