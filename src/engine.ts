@@ -739,8 +739,8 @@ export async function engine_create(): Promise<Engine> {
             const arrayBuffer = await response.arrayBuffer();
             const gltf = await GLTF_LOADER.parseAsync(arrayBuffer, model);
             LOADED_GLTFS[i] = gltf;
-        } catch (error) {
-            console.error(`Error loading GLTF model ${model}:`, error);
+        } catch (e) {
+            console.error(`error loading GLTF model ${model}\n${e}`);
         }
     });
 
