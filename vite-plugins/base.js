@@ -33,7 +33,8 @@ const basePlugin = ({ base }) => {
                 fs.mkdirSync("romfs");
                 for (const file of fs.readdirSync(outDir)) {
                     if (file.match(/^main\.js\.?/)) {
-                        fs.cpSync(path.join(outDir, file), path.join("romfs", file))
+                        fs.cpSync(path.join(outDir, file), path.join("romfs", file));
+                        fs.rmSync(path.join(outDir, file))
                     }
                 }
             }

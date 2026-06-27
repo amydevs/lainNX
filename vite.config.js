@@ -38,7 +38,9 @@ export default {
                                 main: resolve(__dirname, 'src', "main.ts"),
                         },
                         output: {
-                                entryFileNames: "main.js"
+                                assetFileNames: 'assets/[name][extname]',
+                                chunkFileNames: '[name].js',
+                                entryFileNames: "[name].js"
                         }
                 },
                 sourcemap: true,
