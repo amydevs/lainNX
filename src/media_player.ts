@@ -8,8 +8,12 @@ const canvas_texture = new THREE.CanvasTexture(canvas);
 canvas_texture.minFilter = THREE.LinearFilter;
 canvas_texture.magFilter = THREE.LinearFilter;
 const video_mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(4, 3, 1),
-    new THREE.MeshBasicMaterial({ map: canvas_texture })
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshBasicMaterial({
+        map: canvas_texture,
+        // wireframe: true,
+        side: THREE.BackSide,
+    }),
 );
 
 export function get_video(): Video {
@@ -20,8 +24,13 @@ export function get_video_mesh(): THREE.Mesh {
     return video_mesh;
 }
 
-export function update_video_texture(): void {
+export function update_video_texture(camera: THREE.PerspectiveCamera): void {
     console.debug(`updating video texture: ${video.src}`);
+    const height = 40;
+    const width = height * camera.aspect;
+    const face_z = (height / 2) / Math.tan((camera.fov / 2) * Math.PI / 180);
+    const depth = 2 * (face_z - camera.position.z) * -1;
+    video_mesh.scale.set(width, height, depth)
     canvas_ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas_texture.needsUpdate = true;
 }
@@ -52,7 +61,7 @@ export class MediaPlayer {
 
     constructor(media_src?: string, track_src?: string) {
         this.video = video;
-        
+
         // this.track_el = document.getElementById("track") as HTMLTrackElement;
         // this.subtitle_el = document.getElementById("subtitle") as HTMLParagraphElement;
         this.bound_cue_change = this.handle_cue_change.bind(this);
@@ -84,7 +93,6 @@ export class MediaPlayer {
     handle_cue_change(event: any): void {
         // const track = event.target;
         // const { activeCues } = track;
-
         // if (activeCues && activeCues.length > 0) {
         //     this.subtitle_el.textContent = (activeCues[0] as VTTCue).text;
         // } else {
@@ -135,9 +143,7 @@ export class MediaPlayer {
     }
 
     log_error(err: any): void {
-        console.error(
-            `failed to play media ${this.video.src}\n${err}`
-        );
+        console.error(`failed to play media ${this.video.src}\n${err}`);
         // console.error(
         //     `failed to play media ${this.video_si.src} ${
         //         this.track_el.src ? `(track: ${this.track_el.src})` : ""
