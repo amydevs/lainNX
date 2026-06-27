@@ -7,7 +7,6 @@ import {
     SceneUpdateContext,
     SceneUpdateResult,
     TimeContext,
-    get_audio_analyser,
     get_texture,
     load_texture,
     play_audio,
@@ -609,18 +608,19 @@ export function update_media_scene(media: MediaScene, ctx: SceneUpdateContext): 
 
     media.lof_icon.update(time_ctx.time);
 
-    if (!media.player.is_paused()) {
-        const audio_analyser = get_audio_analyser();
-        const frequency_data = audio_analyser.getFrequencyData();
-        media.audio_visualizer_columns.forEach((col, idx) => {
-            const frequency = frequency_data[16 * idx];
-            col.update(frequency);
-        });
-    } else {
-        media.audio_visualizer_columns.forEach((col) => {
-            col.update(0);
-        });
-    }
+    // TODO: re-enable audio visualizer
+    // if (!media.player.is_paused()) {
+    //     const audio_analyser = get_audio_analyser();
+    //     const frequency_data = audio_analyser.getFrequencyData();
+    //     media.audio_visualizer_columns.forEach((col, idx) => {
+    //         const frequency = frequency_data[16 * idx];
+    //         col.update(frequency);
+    //     });
+    // } else {
+    //     media.audio_visualizer_columns.forEach((col) => {
+    //         col.update(0);
+    //     });
+    // }
 
     const elapsed_percentage = media.player.get_elapsed_percentage();
 

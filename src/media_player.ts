@@ -2,12 +2,14 @@ import * as THREE from "three";
 import { get_user_language } from "./engine";
 
 const video = new Video();
-const video_texture = new THREE.VideoTexture(video);
-video_texture.minFilter = THREE.LinearFilter;
-video_texture.magFilter = THREE.LinearFilter;
+const canvas = new OffscreenCanvas(320, 240);
+const canvas_ctx = canvas.getContext("2d");
+const canvas_texture = new THREE.CanvasTexture(canvas);
+canvas_texture.minFilter = THREE.LinearFilter;
+canvas_texture.magFilter = THREE.LinearFilter;
 const video_mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(4, 3, 4),
-    new THREE.MeshBasicMaterial({ map: video_texture })
+    new THREE.BoxGeometry(4, 3, 1),
+    new THREE.MeshBasicMaterial({ map: canvas_texture })
 );
 
 export function get_video(): Video {
@@ -16,6 +18,12 @@ export function get_video(): Video {
 
 export function get_video_mesh(): THREE.Mesh {
     return video_mesh;
+}
+
+export function update_video_texture(): void {
+    console.debug(`updating video texture: ${video.src}`);
+    canvas_ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas_texture.needsUpdate = true;
 }
 
 export function get_audio_media_file_path(media_file: string): string {
