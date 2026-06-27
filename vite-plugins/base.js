@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-const basePlugin = ({ base }) => {
+const base = ({ base }) => {
     const tempBase = "/DO_NOT_USE_BASE_PATH";
     const isExternalAssets = base.startsWith("sdmc:")
     const outDir = !isExternalAssets ? "romfs" : base.split("/").at(-1);
@@ -42,4 +42,4 @@ const basePlugin = ({ base }) => {
     }
 }
 
-export default basePlugin;
+export default base;

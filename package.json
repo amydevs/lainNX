@@ -26,6 +26,10 @@
         "yargs": "^17.7.2"
     },
     "dependencies": {
+        "@nx.js/constants": "^0.4.1",
         "three": "^0.162.0"
+    },
+    "nacp": {
+        "id": "014e4fd947310000"
     }
 }

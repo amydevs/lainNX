@@ -1,14 +1,28 @@
+import { FsSaveDataType } from "@nx.js/constants";
 import { engine_create, get_user_language, read_key_mappings, SceneKind } from "./engine";
 import { check_if_legacy_save_and_upgrade } from "./save";
 import { SiteScene } from "./site";
 
+// nx setup stuff
+console.debug(`Application: ${Switch.Application.self.id}`);
+Object.defineProperty(window, "HTMLAudioElement", {
+    value: Audio,
+    writable: false,
+    configurable: false,
+    enumerable: true,
+});
+let profile = Switch.Profile.current;
+while (profile == null) {
+    profile = Switch.Profile.select();
+}
+Switch.Profile.current = profile;
+console.debug(`${profile.nickname}: ${profile.uid[0]}.${profile.uid[1]}`);
+const lastOpened = localStorage!.getItem("lastOpened");
+const lastOpenedString = lastOpened ? new Date(Number(lastOpened)) : 'never';
+console.debug(`App last opened: ${lastOpenedString}`);
+localStorage!.setItem("lastOpened", Date.now().toString());
+
 (async () => {
-    Object.defineProperty(window, "HTMLAudioElement", {
-        value: Audio,
-        writable: false,
-        configurable: false,
-        enumerable: true,
-    });
     check_if_legacy_save_and_upgrade();
 
     let is_page_visible = true;

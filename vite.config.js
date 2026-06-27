@@ -3,7 +3,9 @@ import gltf from "vite-plugin-gltf";
 import glsl from "vite-plugin-glsl";
 import { resolve } from 'path'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
-import basePlugin from "./vite-plugins/base";
+import base from "./vite-plugins/base";
+import nxjsConfig from "./vite-plugins/nxjs-config";
+
 
 const rootPath = `sdmc:/switch/${packageJson.name}`
 
@@ -30,7 +32,8 @@ export default {
                                 }
                         ]
                 }),
-                basePlugin({ base: rootPath }),
+                base({ base: rootPath }),
+                nxjsConfig(),
         ],
         build: {
                 rollupOptions: {
