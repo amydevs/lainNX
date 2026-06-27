@@ -218,7 +218,7 @@ export function play_audio(sfx: SFX, loop = false): void {
 
     const entry = SFX_STORE[sfx];
 
-    entry.loaded_audio ??= new Audio(`romfs:/sfx/${entry.filename}.mp4`);
+    entry.loaded_audio ??= new Audio(`${__ROOT_PATH__}/sfx/${entry.filename}.mp4`);
     entry.loaded_audio.currentTime = 0;
     entry.loaded_audio.volume = 0.5;
     entry.loaded_audio.loop = loop;
@@ -283,11 +283,12 @@ export type TextureDimensions = {
     h: number;
 };
 
-const TEXTURE_LOADER = new THREE.TextureLoader();
 const LOADED_TEXTURES: THREE.Texture[] = [];
 
 export function load_texture(img: string): THREE.Texture {
-    return TEXTURE_LOADER.load(img);
+    const image = new Image();
+    image.src = img;
+    return new THREE.Texture(image);
 }
 
 export function get_texture(texture: Texture): THREE.Texture {
@@ -562,7 +563,7 @@ export class Engine {
 
         this.renderer = new THREE.WebGLRenderer({
             canvas: screen,
-            alpha: true
+            alpha: true,
         });
         this.renderer.toneMapping = THREE.NoToneMapping;
         this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
@@ -711,7 +712,7 @@ export class Engine {
 export async function engine_create(): Promise<Engine> {
     const is_debug = import.meta.env.DEV;
 
-    const atlas = await TEXTURE_LOADER.loadAsync(sprite_atlas);
+    const atlas = load_texture(sprite_atlas);
     atlas.magFilter = THREE.NearestFilter;
     atlas.minFilter = THREE.NearestFilter;
 
@@ -745,54 +746,52 @@ export async function engine_create(): Promise<Engine> {
     const frames_per_atlas = frames_per_row * frames_per_col;
 
     LAPK_ATLASES_TO_LOAD.forEach(async (spritesheet, index) => {
-        TEXTURE_LOADER.loadAsync(spritesheet).then((spritesheet_texture) => {
-            for (let r = 0; r < frames_per_row; r++) {
-                for (let c = 0; c < frames_per_col; c++) {
-                    const frame_texture = extract_frame(
-                        spritesheet_texture,
-                        lapks_atlas_dim,
-                        lapks_atlas_dim,
-                        c * lapk_w,
-                        r * lapk_h,
-                        lapk_w,
-                        lapk_h
-                    );
+        const spritesheet_texture = load_texture(spritesheet);
+        for (let r = 0; r < frames_per_row; r++) {
+            for (let c = 0; c < frames_per_col; c++) {
+                const frame_texture = extract_frame(
+                    spritesheet_texture,
+                    lapks_atlas_dim,
+                    lapks_atlas_dim,
+                    c * lapk_w,
+                    r * lapk_h,
+                    lapk_w,
+                    lapk_h,
+                );
 
-                    const location = index * frames_per_atlas + r * frames_per_row + c;
-                    LOADED_LAPK_FRAMES[location] = frame_texture;
-                }
+                const location = index * frames_per_atlas + r * frames_per_row + c;
+                LOADED_LAPK_FRAMES[location] = frame_texture;
             }
+        }
 
-            LOADED_LAPK_ATLASES.push(spritesheet_texture.clone());
-        });
+        LOADED_LAPK_ATLASES.push(spritesheet_texture.clone());
     });
 
-    LAPK_TALK_ATLASES_TO_LOAD.forEach(async (spritesheet, index) => {
-        TEXTURE_LOADER.loadAsync(spritesheet).then((spritesheet_texture) => {
-            for (let r = 0; r < frames_per_row; r++) {
-                for (let c = 0; c < frames_per_col; c++) {
-                    const frame_texture = extract_frame(
-                        spritesheet_texture,
-                        lapks_atlas_dim,
-                        lapks_atlas_dim,
-                        c * lapk_w,
-                        r * lapk_h,
-                        lapk_w,
-                        lapk_h
-                    );
+    LAPK_TALK_ATLASES_TO_LOAD.forEach((spritesheet, index) => {
+        const spritesheet_texture = load_texture(spritesheet);
+        for (let r = 0; r < frames_per_row; r++) {
+            for (let c = 0; c < frames_per_col; c++) {
+                const frame_texture = extract_frame(
+                    spritesheet_texture,
+                    lapks_atlas_dim,
+                    lapks_atlas_dim,
+                    c * lapk_w,
+                    r * lapk_h,
+                    lapk_w,
+                    lapk_h,
+                );
 
-                    const location = index * frames_per_atlas + r * frames_per_row + c;
-                    LOADED_LAPK_TALK_FRAMES[location] = frame_texture;
-                }
+                const location = index * frames_per_atlas + r * frames_per_row + c;
+                LOADED_LAPK_TALK_FRAMES[location] = frame_texture;
             }
+        }
 
-            LOADED_LAPK_TALK_ATLASES.push(spritesheet_texture.clone());
-        });
+        LOADED_LAPK_TALK_ATLASES.push(spritesheet_texture.clone());
     });
 
     // preload audio
     SFX_STORE.forEach((entry) => {
-        const audio = new Audio(`romfs:/sfx/${entry.filename}.mp4`);
+        const audio = new Audio(`${__ROOT_PATH__}/sfx/${entry.filename}.mp4`);
 
         // audio.preload = "auto";
 

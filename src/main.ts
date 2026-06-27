@@ -3,6 +3,12 @@ import { check_if_legacy_save_and_upgrade } from "./save";
 import { SiteScene } from "./site";
 
 (async () => {
+    Object.defineProperty(window, "HTMLAudioElement", {
+        value: Audio,
+        writable: false,
+        configurable: false,
+        enumerable: true,
+    });
     check_if_legacy_save_and_upgrade();
 
     let is_page_visible = true;

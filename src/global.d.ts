@@ -6,11 +6,7 @@ declare global {
             this_arg?: any,
         ): { [K in keyof this]: U };
     }
-    var document: {
-        hidden: true;
-    }
+    const __ROOT_PATH__: string;
 }
-
-declare var localStorage: Storage;
 
 export {};

@@ -644,8 +644,8 @@ export function update_media_scene(media: MediaScene, ctx: SceneUpdateContext): 
                 .then(() => {
                     // since the endroll is just a video we need to remove the canvas cover
                     // it will get reset automatically once we return a new scene
-                    const canvas_el = document.getElementById("main-canvas")!;
-                    canvas_el.style.background = "none";
+                    // const canvas_el = document.getElementById("main-canvas")!;
+                    // canvas_el.style.background = "none";
 
                     media.is_viewing_endroll = true;
                     media.scene_group.visible = false;
