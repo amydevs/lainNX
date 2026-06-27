@@ -37,7 +37,6 @@ export function update_video_texture(camera: THREE.PerspectiveCamera): void {
     if (!should_video_rerender) {
         return;
     }
-    console.debug(`updating video texture: ${video.src}`);
     const height = 40;
     const width = height * camera.aspect;
     const face_z = (height / 2) / Math.tan((camera.fov / 2) * Math.PI / 180);
