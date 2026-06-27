@@ -8,6 +8,8 @@ import nxjsConfig from "./vite-plugins/nxjs-config";
 
 
 const rootPath = `sdmc:/switch/${packageJson.name}`
+// uncomment this to make a self contained package
+// const rootPath = "romfs:";
 const assetsDirName = "assets";
 
 export default {
