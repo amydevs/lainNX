@@ -62,6 +62,6 @@ export class TaKScene extends THREE.Scene {
 
         this.node = node;
 
-        this.add(this.lain, get_video_mesh());
+        this.add(this.lain);
     }
 }
