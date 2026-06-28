@@ -1,6 +1,6 @@
 ## lainTSX
 
-A browser-based implementation of the Serial Experiments Lain PSX game using `three.js` with the aim to provide multi-language support and make it more accessible.
+A `nx.js` implementation of the Serial Experiments Lain PSX game using `three.js` with the aim to provide multi-language support and make it more accessible.
 
 ## History
 
@@ -31,6 +31,12 @@ Note that currently the extraction script doesn't extract SFX, but the game stil
 
 - **Finish writing the extraction script**
 - **Improve/complete the translation**
+- **Fix crashes after trying to load videos after sleeping**
+- **Fix audio media scene visualiser not working as audio analysis is not supported by `nx.js` yet**
+- **Fix audio media scene background images**
+- **Fix subtitles**
+- **Fix emote wheel**
+- **Add controls for zoom and aspect ratio**
 
 ## Screenshots
 
