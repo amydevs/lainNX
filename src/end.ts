@@ -14,7 +14,6 @@ import { LainTalk, LainTalkAnimationKind } from "./lain";
 import {
     get_audio_media_file_path,
     get_track_path,
-    get_video_mesh,
     get_voice_syllable_path,
     MediaPlayer,
 } from "./media_player";
