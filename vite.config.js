@@ -2,7 +2,8 @@ import packageJson from "./package.json";
 import gltf from "vite-plugin-gltf";
 import glsl from "vite-plugin-glsl";
 import { resolve } from 'path'
-import { viteStaticCopy } from 'vite-plugin-static-copy'
+import { viteStaticCopy } from "vite-plugin-static-copy";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 import base from "./vite-plugins/base";
 import nxjsConfig from "./vite-plugins/nxjs-config";
 
@@ -34,6 +35,9 @@ export default {
                                         dest: 'json'
                                 }
                         ]
+                }),
+                nodePolyfills({
+                        include: ["stream"],
                 }),
                 base({ base: rootPath }),
                 nxjsConfig(),
