@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { MediaAudio } from "./media_audio";
 
 // video singleton to be used by all media players
 const video = new Video();
@@ -35,50 +36,6 @@ export function get_video_mesh(): THREE.Mesh {
     return video_mesh;
 }
 
-// TODO: change this when fixes get pushed to nx.js that allow for video audio playback to not break
-// audio player to get around video audio issues in nx.js
-const audio_context = new AudioContext();
-export let audio_buffer: AudioBuffer | null = null;
-let audio_source: AudioBufferSourceNode | null = null;
-let started_at = 0;
-export function stop_audio() {
-    audio_source?.stop();
-    audio_source?.disconnect();
-    audio_source = null;
-}
-
-export function start_audio(when?: number, offset?: number, duration?: number) {
-    if (!audio_buffer) {
-        throw new Error("audio buffer was not set before calling audio_start");
-    }
-    stop_audio();
-    audio_source = audio_context.createBufferSource();
-    audio_source.buffer = audio_buffer;
-    audio_source.connect(audio_context.destination);
-    audio_source.start(when, offset, duration);
-    started_at = audio_context.currentTime - (offset ?? 0);
-}
-
-export function is_audio_paused(): boolean {
-    return audio_source == null;
-}
-
-export function get_audio_current_time(): number {
-    return audio_source ? audio_context.currentTime - started_at : 0;
-}
-
-export function get_audio_source(): AudioBufferSourceNode | null {
-    return audio_source;
-}
-
-export function get_audio_context(): AudioContext {
-    return audio_context;
-}
-
-export function set_audio_buffer(buffer: AudioBuffer): void {
-    audio_buffer = buffer;
-}
-
 export function update_video_texture(camera: THREE.PerspectiveCamera): void {
     if (!should_video_rerender) {
         return;
@@ -90,4 +47,13 @@ export function update_video_texture(camera: THREE.PerspectiveCamera): void {
     video_mesh.scale.set(width, height, depth);
     canvas_ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas_texture.needsUpdate = true;
+}
+
+// TODO: change this when fixes get pushed to nx.js that allow for video audio playback to not break
+// audio player to get around video audio issues in nx.js
+
+export const media_audio = new MediaAudio();
+
+export function get_media_audio(): MediaAudio {
+    return media_audio;
 }

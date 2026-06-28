@@ -1,17 +1,18 @@
 import * as THREE from "three";
-import {
-    get_video,
-    get_video_mesh as _get_video_mesh,
-    stop_audio,
-    is_audio_paused,
-    set_audio_buffer,
-    get_audio_context,
-    start_audio,
-    get_audio_source,
-    get_audio_current_time,
-} from "./media_singletons";
+import { get_video, get_video_mesh as _get_video_mesh, media_audio, get_media_audio } from "./media_singletons";
 import { get_user_language } from "./engine";
 import { update_video_texture } from "./media_singletons";
+import { MediaAudio } from "./media_audio";
+
+interface MediaLike {
+    src: string | null;
+    paused: boolean;
+    currentTime: number;
+    duration: number;
+    load(): void | Promise<void>;
+    play(): void | Promise<void>;
+    pause(): void;
+}
 
 export function get_video_mesh(): THREE.Mesh {
     return _get_video_mesh();
@@ -38,7 +39,9 @@ export function get_voice_syllable_path(syllable: string): string {
 }
 
 export class MediaPlayer {
-    media_src: string | null;
+    video: Video;
+    audio: MediaAudio;
+    _is_audio: boolean;
     media_can_play_promise: Promise<void> | null;
     // TODO: re-enable subtitle support
     // track_el: HTMLTrackElement;
@@ -47,7 +50,9 @@ export class MediaPlayer {
     bound_cue_change: (e: any) => void;
 
     constructor(media_src?: string, track_src?: string) {
-        this.media_src = null;
+        this.video = get_video();
+        this.audio = get_media_audio();
+        this._is_audio = false;
         this.media_can_play_promise = null;
 
         // this.track_el = document.getElementById("track") as HTMLTrackElement;
@@ -68,24 +73,27 @@ export class MediaPlayer {
         }
     }
 
+    get media() {
+        return this._is_audio ? this.audio : this.video;
+    }
+
     // TODO: hacky way to determine if media is audio or video, fix this at some point
     is_audio(): boolean {
-        return this.media_src?.startsWith(`${__ROOT_PATH__}/media/audio/`) ?? false;
+        return this._is_audio;
+    }
+
+    get_media(): MediaLike {
+        return this.is_audio() ? media_audio : get_video();
     }
 
     is_paused(): boolean {
-        if (this.is_audio()) {
-            return is_audio_paused();
-        }
-        return get_video().paused;
+        return this.get_media().paused;
     }
 
     reset_and_pause(): void {
-        if (this.is_audio()) {
-            return stop_audio();
-        }
-        get_video().pause();
-        get_video().currentTime = 0;
+        const media = this.get_media();
+        media.pause();
+        media.currentTime = 0;
         // this.subtitle_el.style.visibility = "hidden";
     }
 
@@ -100,7 +108,10 @@ export class MediaPlayer {
     }
 
     load(media_src: string, track_src?: string): void {
-        this.media_src = media_src;
+        this._is_audio = false;
+        if (media_src.startsWith(`${__ROOT_PATH__}/media/audio/`) ?? false) {
+            this._is_audio = true;
+        }
         // TODO: re-enable subtitle support
         // if (this.current_text_track) {
         //     this.current_text_track.removeEventListener("cuechange", this.bound_cue_change);
@@ -113,12 +124,8 @@ export class MediaPlayer {
         // }
 
         if (this.is_audio()) {
-            this.media_can_play_promise = fetch(media_src)
-                .then((r) => r.arrayBuffer())
-                .then(async (data_buffer) => {
-                    const audio_buffer = await get_audio_context().decodeAudioData(data_buffer);
-                    await set_audio_buffer(audio_buffer);
-                });
+            media_audio.src = media_src;
+            this.media_can_play_promise = media_audio.load();
         } else {
             this.media_can_play_promise = new Promise((resolve, reject) => {
                 const can_play_cb = () => {
@@ -139,8 +146,9 @@ export class MediaPlayer {
                     resolve();
                 }, 200);
             });
-            get_video().src = media_src;
-            get_video().load();
+            const media = this.get_media();
+            media.src = media_src;
+            media.load();
             this.reset_and_pause();
         }
 
@@ -159,24 +167,13 @@ export class MediaPlayer {
     async play(): Promise<void> {
         // this.subtitle_el.style.visibility = "visible";
         await this.media_can_play_promise!;
-        if (this.is_audio()) {
-            start_audio();
-        } else {
-            await get_video().play();
-        }
+        await this.get_media().play();
     }
 
     get_elapsed_percentage(): number {
-        if (this.is_audio()) {
-            const audioSource = get_audio_source();
-            const duration = audioSource?.buffer?.duration ?? 0;
-            if (duration > 0) {
-                const pct = (get_audio_current_time() / duration) * 100;
-                return Math.min(100, Math.ceil(pct));
-            }
-        }
-        if (get_video().readyState >= 1 && get_video().duration > 0) {
-            const pct = (get_video().currentTime / get_video().duration) * 100;
+        const media = this.get_media();
+        if (media.duration > 0) {
+            const pct = (media.currentTime / media.duration) * 100;
             return Math.min(100, Math.ceil(pct));
         }
 
@@ -184,7 +181,7 @@ export class MediaPlayer {
     }
 
     log_error(err: any): void {
-        console.error(`failed to play media ${this.media_src}\n${err}`);
+        console.error(`failed to play media ${this.media.src}\n${err}`);
         // console.error(
         //     `failed to play media ${this.video_si.src} ${
         //         this.track_el.src ? `(track: ${this.track_el.src})` : ""
