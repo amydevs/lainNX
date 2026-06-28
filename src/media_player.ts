@@ -1,9 +1,14 @@
 import * as THREE from "three";
 import {
-    get_audio_context,
     get_video,
-    set_audio_buffer,
     get_video_mesh as _get_video_mesh,
+    stop_audio,
+    is_audio_paused,
+    set_audio_buffer,
+    get_audio_context,
+    start_audio,
+    get_audio_source,
+    get_audio_current_time,
 } from "./media_singletons";
 import { get_user_language } from "./engine";
 import { update_video_texture } from "./media_singletons";
@@ -33,8 +38,8 @@ export function get_voice_syllable_path(syllable: string): string {
 }
 
 export class MediaPlayer {
-    video: Video;
-    video_can_play_promise: Promise<void> | null;
+    media_src: string | null;
+    media_can_play_promise: Promise<void> | null;
     // TODO: re-enable subtitle support
     // track_el: HTMLTrackElement;
     // subtitle_el: HTMLParagraphElement;
@@ -42,8 +47,8 @@ export class MediaPlayer {
     bound_cue_change: (e: any) => void;
 
     constructor(media_src?: string, track_src?: string) {
-        this.video = get_video();
-        this.video_can_play_promise = null;
+        this.media_src = null;
+        this.media_can_play_promise = null;
 
         // this.track_el = document.getElementById("track") as HTMLTrackElement;
         // this.subtitle_el = document.getElementById("subtitle") as HTMLParagraphElement;
@@ -63,13 +68,24 @@ export class MediaPlayer {
         }
     }
 
+    // TODO: hacky way to determine if media is audio or video, fix this at some point
+    is_audio(): boolean {
+        return this.media_src?.startsWith(`${__ROOT_PATH__}/media/audio/`) ?? false;
+    }
+
     is_paused(): boolean {
-        return this.video.paused;
+        if (this.is_audio()) {
+            return is_audio_paused();
+        }
+        return get_video().paused;
     }
 
     reset_and_pause(): void {
-        this.video.pause();
-        this.video.currentTime = 0;
+        if (this.is_audio()) {
+            return stop_audio();
+        }
+        get_video().pause();
+        get_video().currentTime = 0;
         // this.subtitle_el.style.visibility = "hidden";
     }
 
@@ -84,6 +100,7 @@ export class MediaPlayer {
     }
 
     load(media_src: string, track_src?: string): void {
+        this.media_src = media_src;
         // TODO: re-enable subtitle support
         // if (this.current_text_track) {
         //     this.current_text_track.removeEventListener("cuechange", this.bound_cue_change);
@@ -95,37 +112,37 @@ export class MediaPlayer {
         //     this.subtitle_el.textContent = "";
         // }
 
-        this.video_can_play_promise = fetch(media_src)
-            .then((response) => response.blob())
-            .then(async (blob) => {
-                const blobUrl = URL.createObjectURL(blob);
-                this.video.src = blobUrl;
-                this.video.load();
-                this.reset_and_pause();
-                set_audio_buffer(await get_audio_context().decodeAudioData(await blob.arrayBuffer()));
-            })
-            .then(
-                () =>
-                    new Promise((resolve, reject) => {
-                        const can_play_cb = () => {
-                            this.video.removeEventListener("canplay", can_play_cb);
-                            resolve();
-                        };
-                        this.video.addEventListener("canplay", can_play_cb, { once: true });
-                        const error_cb = (e: unknown) => {
-                            this.video.removeEventListener("error", error_cb);
-                            reject(e);
-                        };
-                        this.video.addEventListener("error", error_cb, { once: true });
-                        // TODO: find a better way of getting around idle scenes not being able to play due to
-                        // immediately playing after loading. This is a hacky solution that waits 200ms before resolving the promise.
-                        setTimeout(() => {
-                            this.video.removeEventListener("canplay", can_play_cb);
-                            this.video.removeEventListener("error", error_cb);
-                            resolve();
-                        }, 200);
-                    }),
-            );
+        if (this.is_audio()) {
+            this.media_can_play_promise = fetch(media_src)
+                .then((r) => r.arrayBuffer())
+                .then(async (data_buffer) => {
+                    const audio_buffer = await get_audio_context().decodeAudioData(data_buffer);
+                    await set_audio_buffer(audio_buffer);
+                });
+        } else {
+            this.media_can_play_promise = new Promise((resolve, reject) => {
+                const can_play_cb = () => {
+                    get_video().removeEventListener("canplay", can_play_cb);
+                    resolve();
+                };
+                get_video().addEventListener("canplay", can_play_cb, { once: true });
+                const error_cb = (e: unknown) => {
+                    get_video().removeEventListener("error", error_cb);
+                    reject(e);
+                };
+                get_video().addEventListener("error", error_cb, { once: true });
+                // TODO: find a better way of getting around idle scenes not being able to play due to
+                // immediately playing after loading. This is a hacky solution that waits 200ms before resolving the promise.
+                setTimeout(() => {
+                    get_video().removeEventListener("canplay", can_play_cb);
+                    get_video().removeEventListener("error", error_cb);
+                    resolve();
+                }, 200);
+            });
+            get_video().src = media_src;
+            get_video().load();
+            this.reset_and_pause();
+        }
 
         // this.track_el = document.createElement("track");
         // this.track_el.id = "track";
@@ -141,13 +158,25 @@ export class MediaPlayer {
 
     async play(): Promise<void> {
         // this.subtitle_el.style.visibility = "visible";
-        await this.video_can_play_promise!;
-        await this.video.play();
+        await this.media_can_play_promise!;
+        if (this.is_audio()) {
+            start_audio();
+        } else {
+            await get_video().play();
+        }
     }
 
     get_elapsed_percentage(): number {
-        if (this.video.readyState >= 1 && this.video.duration > 0) {
-            const pct = (this.video.currentTime / this.video.duration) * 100;
+        if (this.is_audio()) {
+            const audioSource = get_audio_source();
+            const duration = audioSource?.buffer?.duration ?? 0;
+            if (duration > 0) {
+                const pct = (get_audio_current_time() / duration) * 100;
+                return Math.min(100, Math.ceil(pct));
+            }
+        }
+        if (get_video().readyState >= 1 && get_video().duration > 0) {
+            const pct = (get_video().currentTime / get_video().duration) * 100;
             return Math.min(100, Math.ceil(pct));
         }
 
@@ -155,7 +184,7 @@ export class MediaPlayer {
     }
 
     log_error(err: any): void {
-        console.error(`failed to play media ${this.video.src}\n${err}`);
+        console.error(`failed to play media ${this.media_src}\n${err}`);
         // console.error(
         //     `failed to play media ${this.video_si.src} ${
         //         this.track_el.src ? `(track: ${this.track_el.src})` : ""

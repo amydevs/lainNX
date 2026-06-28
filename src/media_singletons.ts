@@ -41,36 +41,34 @@ const audio_context = new AudioContext();
 export let audio_buffer: AudioBuffer | null = null;
 let audio_source: AudioBufferSourceNode | null = null;
 let started_at = 0;
-video.addEventListener("timeupdate", () => {
-    const audioOffset = audio_context.currentTime - started_at;
-    const videoOffset = video.currentTime;
-    if (Math.abs(videoOffset - audioOffset) > 0.05) {
-        console.debug(`Syncing audio time from ${audioOffset} to ${videoOffset}`);
-        start_audio(0, videoOffset);
-    }
-});
-video.addEventListener("play", () => {
-    start_audio(0, video.currentTime);
-});
-video.addEventListener("ended", stop_audio);
-video.addEventListener("pause", stop_audio);
-
-function stop_audio() {
+export function stop_audio() {
     audio_source?.stop();
+    audio_source?.disconnect();
     audio_source = null;
 }
 
-// only really meant to be used by media_player
-function start_audio(when?: number, offset?: number, duration?: number) {
+export function start_audio(when?: number, offset?: number, duration?: number) {
     if (!audio_buffer) {
         throw new Error("audio buffer was not set before calling audio_start");
     }
-    audio_source?.stop();
+    stop_audio();
     audio_source = audio_context.createBufferSource();
     audio_source.buffer = audio_buffer;
     audio_source.connect(audio_context.destination);
     audio_source.start(when, offset, duration);
     started_at = audio_context.currentTime - (offset ?? 0);
+}
+
+export function is_audio_paused(): boolean {
+    return audio_source == null;
+}
+
+export function get_audio_current_time(): number {
+    return audio_source ? audio_context.currentTime - started_at : 0;
+}
+
+export function get_audio_source(): AudioBufferSourceNode | null {
+    return audio_source;
 }
 
 export function get_audio_context(): AudioContext {
