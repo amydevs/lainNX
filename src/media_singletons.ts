@@ -40,35 +40,28 @@ export function get_video_mesh(): THREE.Mesh {
 const audio_context = new AudioContext();
 export let audio_buffer: AudioBuffer | null = null;
 let audio_source: AudioBufferSourceNode | null = null;
-let startedAt = 0;
+let started_at = 0;
 video.addEventListener("timeupdate", () => {
-  const audioOffset = audio_context.currentTime - startedAt;
-  const videoOffset = video.currentTime;
-  console.debug(`Deviation: ${Math.abs(videoOffset - audioOffset)}`);
-  if (Math.abs(videoOffset - audioOffset) > 0.05) {
-    console.debug(`Syncing audio time from ${audioOffset} to ${videoOffset}`);
-    start_audio(0, videoOffset);
-  }
+    const audioOffset = audio_context.currentTime - started_at;
+    const videoOffset = video.currentTime;
+    if (Math.abs(videoOffset - audioOffset) > 0.05) {
+        console.debug(`Syncing audio time from ${audioOffset} to ${videoOffset}`);
+        start_audio(0, videoOffset);
+    }
+});
+video.addEventListener("play", () => {
+    start_audio(0, video.currentTime);
 });
 video.addEventListener("ended", stop_audio);
 video.addEventListener("pause", stop_audio);
 
-export function get_audio_context(): AudioContext {
-    return audio_context;
-}
-
-export function set_audio_buffer(buffer: AudioBuffer): void {
-    audio_buffer = buffer;
-}
-
-// only really meant to be used by media_player
-export function stop_audio() {
+function stop_audio() {
     audio_source?.stop();
     audio_source = null;
 }
 
 // only really meant to be used by media_player
-export async function start_audio(when?: number, offset?: number, duration?: number) {
+async function start_audio(when?: number, offset?: number, duration?: number) {
     if (!audio_buffer) {
         throw new Error("audio buffer was not set before calling audio_start");
     }
@@ -77,7 +70,15 @@ export async function start_audio(when?: number, offset?: number, duration?: num
     audio_source.buffer = audio_buffer;
     audio_source.connect(audio_context.destination);
     audio_source.start(when, offset, duration);
-    startedAt = audio_context.currentTime - (offset ?? 0);
+    started_at = audio_context.currentTime - (offset ?? 0);
+}
+
+export function get_audio_context(): AudioContext {
+    return audio_context;
+}
+
+export function set_audio_buffer(buffer: AudioBuffer): void {
+    audio_buffer = buffer;
 }
 
 export function update_video_texture(camera: THREE.PerspectiveCamera): void {

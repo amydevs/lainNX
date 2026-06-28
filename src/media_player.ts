@@ -1,5 +1,10 @@
 import * as THREE from "three";
-import { get_audio_context, get_video, set_audio_buffer, start_audio, stop_audio, get_video_mesh as _get_video_mesh } from "./media_singletons";
+import {
+    get_audio_context,
+    get_video,
+    set_audio_buffer,
+    get_video_mesh as _get_video_mesh,
+} from "./media_singletons";
 import { get_user_language } from "./engine";
 import { update_video_texture } from "./media_singletons";
 
@@ -65,7 +70,6 @@ export class MediaPlayer {
     reset_and_pause(): void {
         this.video.pause();
         this.video.currentTime = 0;
-        stop_audio();
         // this.subtitle_el.style.visibility = "hidden";
     }
 
@@ -139,7 +143,6 @@ export class MediaPlayer {
         // this.subtitle_el.style.visibility = "visible";
         await this.video_can_play_promise!;
         await this.video.play();
-        start_audio();
     }
 
     get_elapsed_percentage(): number {
