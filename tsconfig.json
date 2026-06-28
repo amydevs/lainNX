@@ -4,7 +4,10 @@
     "useDefineForClassFields": true,
     "module": "ES2022",
     "lib": ["ES2022"],
-    "types": ["@nx.js/runtime"],
+    "types": [
+      "@nx.js/runtime",
+      "node"
+    ],
     "skipLibCheck": true,
 
     /* Bundler mode */

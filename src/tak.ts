@@ -4,6 +4,7 @@ import { CursorLocation, SiteScene } from "./site";
 import { NodeData, set_node_as_viewed } from "./node";
 import { SceneKind, SceneUpdateContext, SceneUpdateResult } from "./engine";
 import { get_audio_media_file_path, get_track_path, MediaPlayer } from "./media_player";
+import { get_subtitles_mesh } from "./media_singletons";
 
 export function update_tak_scene(tak: TaKScene, ctx: SceneUpdateContext): SceneUpdateResult {
     const { time_ctx, game_state, camera } = ctx;
@@ -62,6 +63,6 @@ export class TaKScene extends THREE.Scene {
 
         this.node = node;
 
-        this.add(this.lain);
+        this.add(this.lain, get_subtitles_mesh());
     }
 }

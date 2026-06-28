@@ -13,6 +13,7 @@ import { get_node_data, NodeID, set_node_as_viewed } from "./node";
 import { MediaBackgroundImages } from "./media";
 import { PolytanPartProgress } from "./save";
 import { are_all_polytan_parts_unlocked } from "./polytan";
+import { get_subtitles_mesh } from "./media_singletons";
 
 type VideoIdleMedia = {
     media_file: string;
@@ -57,7 +58,7 @@ function get_random_idle_audio_media(site: SiteKind): AudioIdleMedia {
 
 function get_random_idle_video_media(
     site: SiteKind,
-    polytan_part_progress: PolytanPartProgress
+    polytan_part_progress: PolytanPartProgress,
 ): VideoIdleMedia {
     switch (site) {
         case SiteKind.A:
@@ -143,7 +144,7 @@ export class IdleScene extends THREE.Scene {
     constructor(
         enter_location: CursorLocation,
         polytan_part_progress: PolytanPartProgress,
-        enter_time: number
+        enter_time: number,
     ) {
         super();
 
@@ -171,6 +172,7 @@ export class IdleScene extends THREE.Scene {
             this.node_id = null;
             this.add(get_video_mesh());
         }
+        this.add(get_subtitles_mesh());
 
         this.failed_to_load = false;
 

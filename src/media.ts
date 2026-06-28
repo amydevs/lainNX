@@ -42,6 +42,7 @@ import {
 } from "./media_player";
 import { Progress, save_state } from "./save";
 import { EndScene } from "./end";
+import { get_subtitles_mesh } from "./media_singletons";
 
 enum MediaSide {
     Left,
@@ -402,7 +403,7 @@ function handle_keys(
     progress: Progress,
     key_states: boolean[],
     camera: THREE.Camera,
-    time_ctx: TimeContext
+    time_ctx: TimeContext,
 ): SceneUpdateResult {
     const { time } = time_ctx;
 
@@ -677,7 +678,9 @@ export class MediaBackgroundImages extends Sprite2D {
         const textures: THREE.Texture[] = [];
         table_indices.forEach((image_index) => {
             if (image_index !== null) {
-                textures.push(load_texture(`${__ROOT_PATH__}/media-background-images/${site}/${image_index}.png`));
+                textures.push(
+                    load_texture(`${__ROOT_PATH__}/media-background-images/${site}/${image_index}.png`),
+                );
             }
         });
 
@@ -850,7 +853,7 @@ export class MediaScene extends THREE.Scene {
 
         this.is_viewing_endroll = false;
 
-        this.add(this.scene_group);
+        this.add(this.scene_group, get_subtitles_mesh());
     }
 }
 

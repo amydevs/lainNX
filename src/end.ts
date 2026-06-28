@@ -23,6 +23,7 @@ import { BootScene } from "./boot";
 import { SiteKind } from "./site";
 import { get_current_location, save_state } from "./save";
 import { ChangeSiteScene } from "./change_site";
+import { get_subtitles_mesh } from "./media_singletons";
 
 function get_syllable_filenames(player_name: string): string[] {
     const { translation_table, vowels, voice_file_list } = voice_json;
@@ -83,7 +84,7 @@ function get_syllable_filenames(player_name: string): string[] {
             filename
                 .split("_")
                 .map((c) => translation_table[c as keyof typeof translation_table])
-                .join("_")
+                .join("_"),
         );
     }
 
@@ -194,7 +195,7 @@ class Selection extends Group {
                     columns,
                     frame_count: columns * rows,
                     frame_update_rate: 24,
-                })
+                }),
             );
         }
 
@@ -230,7 +231,7 @@ class Selection extends Group {
             this.middle_box,
             this.lain,
             ...this.middle_spritesheets,
-            this.circle
+            this.circle,
         );
     }
 
@@ -269,7 +270,7 @@ export class EndScene extends THREE.Scene {
             0,
             Math.PI * 2,
             Math.PI * 0.25,
-            Math.PI * 0.5
+            Math.PI * 0.5,
         );
 
         const uv = blue_sphere_geom.attributes.uv;
@@ -290,7 +291,7 @@ export class EndScene extends THREE.Scene {
                 transparent: true,
                 side: THREE.DoubleSide,
             }),
-            { position: vec3(0, 0, -1.5), render_order: 1 }
+            { position: vec3(0, 0, -1.5), render_order: 1 },
         );
 
         const cyan_sphere_geometry = new THREE.SphereGeometry(
@@ -300,7 +301,7 @@ export class EndScene extends THREE.Scene {
             0,
             Math.PI * 2,
             Math.PI * 0.1,
-            Math.PI * 0.8
+            Math.PI * 0.8,
         );
 
         const cyan_sphere_material = new THREE.MeshBasicMaterial({
@@ -352,6 +353,7 @@ export class EndScene extends THREE.Scene {
             create_point_light({ intensity: 8, position: vec3(0, 0, 1) }),
             this.back_light,
             this.selection,
+            get_subtitles_mesh(),
         );
     }
 }

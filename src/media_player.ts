@@ -1,7 +1,15 @@
 import * as THREE from "three";
-import { get_video, get_video_mesh as _get_video_mesh, get_media_audio } from "./media_singletons";
+import { type Node, parseSync as parseVttSync } from "subtitle";
+import {
+    get_video,
+    get_video_mesh as _get_video_mesh,
+    get_media_audio,
+    update_active_cues,
+    set_cues,
+    update_subtitles_mesh,
+} from "./media_singletons";
 import { get_user_language } from "./engine";
-import { update_video_texture } from "./media_singletons";
+import { update_video_mesh } from "./media_singletons";
 import { MediaAudio } from "./media_audio";
 
 export function get_video_mesh(): THREE.Mesh {
@@ -9,7 +17,9 @@ export function get_video_mesh(): THREE.Mesh {
 }
 
 export function update_media_player(camera: THREE.PerspectiveCamera) {
-    update_video_texture(camera);
+    update_active_cues();
+    update_subtitles_mesh(camera);
+    update_video_mesh(camera);
 }
 
 export function get_audio_media_file_path(media_file: string): string {
@@ -33,6 +43,8 @@ export class MediaPlayer {
     audio: MediaAudio;
     _is_audio: boolean;
     media_can_play_promise: Promise<void> | null;
+    subtitles_can_play_promise: Promise<void> | null;
+    subtitles_fetch_abort_controller: AbortController | null;
     // TODO: re-enable subtitle support
     // track_el: HTMLTrackElement;
     // subtitle_el: HTMLParagraphElement;
@@ -44,6 +56,8 @@ export class MediaPlayer {
         this.audio = get_media_audio();
         this._is_audio = false;
         this.media_can_play_promise = null;
+        this.subtitles_can_play_promise = null;
+        this.subtitles_fetch_abort_controller = null;
 
         // this.track_el = document.getElementById("track") as HTMLTrackElement;
         // this.subtitle_el = document.getElementById("subtitle") as HTMLParagraphElement;
@@ -94,8 +108,12 @@ export class MediaPlayer {
     }
 
     load(media_src: string, track_src?: string): void {
-        if (media_src.startsWith(`${__ROOT_PATH__}/media/audio/`) ?? false) {
+        if (media_src.startsWith(`${__ROOT_PATH__}/media/audio/`)) {
             this._is_audio = true;
+            this.video.src = "";
+        } else {
+            this._is_audio = false;
+            this.audio.src = "";
         }
         // TODO: re-enable subtitle support
         // if (this.current_text_track) {
@@ -108,7 +126,7 @@ export class MediaPlayer {
         //     this.subtitle_el.textContent = "";
         // }
 
-        this.media_can_play_promise = new Promise((resolve, reject) => {
+        this.media_can_play_promise = new Promise<void>((resolve, reject) => {
             const can_play_cb = () => {
                 this.media.removeEventListener("canplay", can_play_cb);
                 resolve();
@@ -136,8 +154,17 @@ export class MediaPlayer {
         // this.track_el.kind = "subtitles";
         // this.track_el.default = true;
 
+        set_cues([]);
+        this.subtitles_fetch_abort_controller?.abort();
         if (track_src) {
-            // this.track_el.src = track_src;
+            this.subtitles_fetch_abort_controller = new AbortController();
+            this.subtitles_can_play_promise = fetch(track_src, { signal: this.subtitles_fetch_abort_controller.signal })
+                .then((response) => response.text())
+                .then((vtt_text) => {
+                    const nodes: Node[] = parseVttSync(vtt_text);
+                    set_cues(nodes.filter((e) => e.type === "cue").map((e) => e.data));
+                })
+                .catch(() => {});
         }
 
         // this.video_si.appendChild(this.track_el);

@@ -31,10 +31,10 @@ Note that currently the extraction script doesn't extract SFX, but the game stil
 
 - **Finish writing the extraction script**
 - **Improve/complete the translation**
-- **Fix crashes after trying to load videos after sleeping**
-- **Fix audio media scene visualiser not working as audio analysis is not supported by `nx.js` yet**
+- **Fix crashes after trying to load videos after sleeping (`nx.js` issue)**
+- **Fix audio media scene visualiser not working as audio analysis is not supported (`nx.js` issue)**
 - **Fix audio media scene background images**
-- **Fix subtitles**
+- **Fix subtitles not appearing over text**
 - **Fix emote wheel**
 - **Add controls for zoom and aspect ratio**
 
