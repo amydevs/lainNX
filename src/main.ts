@@ -31,14 +31,12 @@ for (const k of ["log", "warn", "info", "error", "debug"]) {
         enumerable: true,
     });
 }
-// save file initialization
-console.debug(`Application: ${Switch.Application.self.id}`);
+// profile selection
 let profile = Switch.Profile.current;
 while (profile == null) {
     profile = Switch.Profile.select();
 }
 Switch.Profile.current = profile;
-console.debug(`${profile.nickname}: ${profile.uid[0]}.${profile.uid[1]}`);
 // control handling
 function update_controls(engine: Engine) {
     const pads = navigator.getGamepads();
