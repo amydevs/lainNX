@@ -42,6 +42,7 @@ import {
 } from "./media_player";
 import { Progress, save_state } from "./save";
 import { EndScene } from "./end";
+import { get_subtitles_mesh } from "./media_singletons";
 
 enum MediaSide {
     Left,
@@ -837,6 +838,7 @@ export class MediaScene extends THREE.Scene {
             this.audio_visualizer_columns = create_audio_visualizer_columns();
 
             group.add(this.lof_icon, ...this.audio_visualizer_columns, this.images);
+            this.add(get_subtitles_mesh());
         } else {
             this.player = new MediaPlayer(get_video_media_file_path(node.media_file), track_path);
             this.add(get_video_mesh());

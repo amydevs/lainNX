@@ -1,7 +1,15 @@
 import * as THREE from "three";
-import { get_video, get_video_mesh as _get_video_mesh, get_media_audio } from "./media_singletons";
+import { type Node, parseSync as parseVttSync } from "subtitle";
+import {
+    get_video,
+    get_video_mesh as _get_video_mesh,
+    get_media_audio,
+    update_active_cues,
+    set_cues,
+    update_subtitles_mesh,
+} from "./media_singletons";
 import { get_user_language } from "./engine";
-import { update_video_texture } from "./media_singletons";
+import { update_video_mesh } from "./media_singletons";
 import { MediaAudio } from "./media_audio";
 
 export function get_video_mesh(): THREE.Mesh {
@@ -9,7 +17,9 @@ export function get_video_mesh(): THREE.Mesh {
 }
 
 export function update_media_player(camera: THREE.PerspectiveCamera) {
-    update_video_texture(camera);
+    update_active_cues();
+    update_subtitles_mesh(camera);
+    update_video_mesh(camera);
 }
 
 export function get_audio_media_file_path(media_file: string): string {
@@ -96,6 +106,10 @@ export class MediaPlayer {
     load(media_src: string, track_src?: string): void {
         if (media_src.startsWith(`${__ROOT_PATH__}/media/audio/`) ?? false) {
             this._is_audio = true;
+            this.video.src = "";
+        } else {
+            this._is_audio = false;
+            this.audio.src = "";
         }
         // TODO: re-enable subtitle support
         // if (this.current_text_track) {
@@ -137,6 +151,12 @@ export class MediaPlayer {
         // this.track_el.default = true;
 
         if (track_src) {
+            fetch(track_src)
+                .then((response) => response.text())
+                .then((vtt_text) => {
+                    const nodes: Node[] = parseVttSync(vtt_text);
+                    set_cues(nodes.filter((e) => e.type === "cue").map((e) => e.data));
+                });
             // this.track_el.src = track_src;
         }
 
