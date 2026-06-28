@@ -1,49 +1,14 @@
 import * as THREE from "three";
+import { get_audio_context, get_video, set_audio_buffer, start_audio, stop_audio, get_video_mesh as _get_video_mesh } from "./media_singletons";
 import { get_user_language } from "./engine";
-
-const video = new Video();
-let should_video_rerender = false;
-const enable_rerender_cb = () => should_video_rerender = true;
-const disable_rerender_cb = () => should_video_rerender = false;
-for (const event of ["loadedmetadata", "canplay", "play"]) {
-    video.addEventListener(event, enable_rerender_cb);
-}
-for (const event of ["pause", "ended"]) {
-    video.addEventListener(event, disable_rerender_cb);
-}
-const canvas = new OffscreenCanvas(320, 240);
-const canvas_ctx = canvas.getContext("2d");
-const canvas_texture = new THREE.CanvasTexture(canvas);
-canvas_texture.minFilter = THREE.LinearFilter;
-canvas_texture.magFilter = THREE.LinearFilter;
-const video_mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({
-        map: canvas_texture,
-        // wireframe: true,
-        side: THREE.BackSide,
-    }),
-);
-
-export function get_video(): Video {
-    return video;
-}
+import { update_video_texture } from "./media_singletons";
 
 export function get_video_mesh(): THREE.Mesh {
-    return video_mesh;
+    return _get_video_mesh();
 }
 
-export function update_video_texture(camera: THREE.PerspectiveCamera): void {
-    if (!should_video_rerender) {
-        return;
-    }
-    const height = 40;
-    const width = height * camera.aspect;
-    const face_z = height / 2 / Math.tan(((camera.fov / 2) * Math.PI) / 180);
-    const depth = 2 * (face_z - camera.position.z) * -1;
-    video_mesh.scale.set(width, height, depth);
-    canvas_ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    canvas_texture.needsUpdate = true;
+export function update_media_player(camera: THREE.PerspectiveCamera) {
+    update_video_texture(camera);
 }
 
 export function get_audio_media_file_path(media_file: string): string {
@@ -72,7 +37,7 @@ export class MediaPlayer {
     bound_cue_change: (e: any) => void;
 
     constructor(media_src?: string, track_src?: string) {
-        this.video = video;
+        this.video = get_video();
         this.video_can_play_promise = null;
 
         // this.track_el = document.getElementById("track") as HTMLTrackElement;
@@ -100,6 +65,7 @@ export class MediaPlayer {
     reset_and_pause(): void {
         this.video.pause();
         this.video.currentTime = 0;
+        stop_audio();
         // this.subtitle_el.style.visibility = "hidden";
     }
 
@@ -125,28 +91,37 @@ export class MediaPlayer {
         //     this.subtitle_el.textContent = "";
         // }
 
-        this.video_can_play_promise = new Promise((resolve, reject) => {
-            const can_play_cb = () => {
-                this.video.removeEventListener("canplay", can_play_cb);
-                resolve();
-            };
-            this.video.addEventListener("canplay", can_play_cb, { once: true });
-            const error_cb = (e: unknown) => {
-                this.video.removeEventListener("error", error_cb);
-                reject(e);
-            };
-            this.video.addEventListener("error", error_cb, { once: true });
-            // TODO: find a better way of getting around idle scenes not being able to play due to
-            // immediately playing after loading. This is a hacky solution that waits 200ms before resolving the promise.
-            setTimeout(() => {
-                this.video.removeEventListener("canplay", can_play_cb);
-                this.video.removeEventListener("error", error_cb);
-                resolve();
-            }, 200);
-        });
-        this.video.src = media_src;
-        this.video.load();
-        this.reset_and_pause();
+        this.video_can_play_promise = fetch(media_src)
+            .then((response) => response.blob())
+            .then(async (blob) => {
+                const blobUrl = URL.createObjectURL(blob);
+                this.video.src = blobUrl;
+                this.video.load();
+                this.reset_and_pause();
+                set_audio_buffer(await get_audio_context().decodeAudioData(await blob.arrayBuffer()));
+            })
+            .then(
+                () =>
+                    new Promise((resolve, reject) => {
+                        const can_play_cb = () => {
+                            this.video.removeEventListener("canplay", can_play_cb);
+                            resolve();
+                        };
+                        this.video.addEventListener("canplay", can_play_cb, { once: true });
+                        const error_cb = (e: unknown) => {
+                            this.video.removeEventListener("error", error_cb);
+                            reject(e);
+                        };
+                        this.video.addEventListener("error", error_cb, { once: true });
+                        // TODO: find a better way of getting around idle scenes not being able to play due to
+                        // immediately playing after loading. This is a hacky solution that waits 200ms before resolving the promise.
+                        setTimeout(() => {
+                            this.video.removeEventListener("canplay", can_play_cb);
+                            this.video.removeEventListener("error", error_cb);
+                            resolve();
+                        }, 200);
+                    }),
+            );
 
         // this.track_el = document.createElement("track");
         // this.track_el.id = "track";
@@ -163,7 +138,8 @@ export class MediaPlayer {
     async play(): Promise<void> {
         // this.subtitle_el.style.visibility = "visible";
         await this.video_can_play_promise!;
-        return await this.video.play();
+        await this.video.play();
+        start_audio();
     }
 
     get_elapsed_percentage(): number {
