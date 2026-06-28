@@ -353,7 +353,6 @@ export class EndScene extends THREE.Scene {
             create_point_light({ intensity: 8, position: vec3(0, 0, 1) }),
             this.back_light,
             this.selection,
-            get_video_mesh()
         );
     }
 }
