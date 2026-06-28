@@ -169,7 +169,7 @@ export class MediaPlayer {
     get_elapsed_percentage(): number {
         if (this.video.readyState >= 1 && this.video.duration > 0) {
             const pct = (this.video.currentTime / this.video.duration) * 100;
-            return Math.min(100, Math.round(pct));
+            return Math.min(100, Math.ceil(pct));
         }
 
         return 0;
