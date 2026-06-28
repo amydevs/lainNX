@@ -61,7 +61,7 @@ function stop_audio() {
 }
 
 // only really meant to be used by media_player
-async function start_audio(when?: number, offset?: number, duration?: number) {
+function start_audio(when?: number, offset?: number, duration?: number) {
     if (!audio_buffer) {
         throw new Error("audio buffer was not set before calling audio_start");
     }
