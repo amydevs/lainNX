@@ -52,7 +52,7 @@ export function update_video_texture(camera: THREE.PerspectiveCamera): void {
 // TODO: change this when fixes get pushed to nx.js that allow for video audio playback to not break
 // audio player to get around video audio issues in nx.js
 
-export const media_audio = new MediaAudio();
+const media_audio = new MediaAudio();
 
 export function get_media_audio(): MediaAudio {
     return media_audio;

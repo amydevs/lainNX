@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { get_video, get_video_mesh as _get_video_mesh, media_audio, get_media_audio } from "./media_singletons";
+import { get_video, get_video_mesh as _get_video_mesh, get_media_audio } from "./media_singletons";
 import { get_user_language } from "./engine";
 import { update_video_texture } from "./media_singletons";
 import { MediaAudio } from "./media_audio";
@@ -83,7 +83,7 @@ export class MediaPlayer {
     }
 
     get_media(): MediaLike {
-        return this.is_audio() ? media_audio : get_video();
+        return this.is_audio() ? this.audio : this.video;
     }
 
     is_paused(): boolean {
@@ -124,8 +124,10 @@ export class MediaPlayer {
         // }
 
         if (this.is_audio()) {
-            media_audio.src = media_src;
-            this.media_can_play_promise = media_audio.load();
+            this.audio.src = media_src;
+            this.audio.load();
+            this.media_can_play_promise = this.audio.load_promise;
+            this.reset_and_pause();
         } else {
             this.media_can_play_promise = new Promise((resolve, reject) => {
                 const can_play_cb = () => {

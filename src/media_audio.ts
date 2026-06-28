@@ -3,6 +3,7 @@ export class MediaAudio extends EventTarget {
     audio_context: AudioContext;
     audio_buffer: AudioBuffer | null;
     audio_source: AudioBufferSourceNode | null;
+    load_promise: Promise<void> | null;
     started_at: number;
     resume_time: number;
     constructor(media_src?: string) {
@@ -11,11 +12,13 @@ export class MediaAudio extends EventTarget {
         this.audio_context = new AudioContext();
         this.audio_buffer = null;
         this.audio_source = null;
+        this.load_promise = null;
         this.started_at = 0;
         this.resume_time = 0;
 
+
         if (this.media_src != null) {
-            void this.load();
+            this.load();
         }
     }
 
@@ -85,19 +88,20 @@ export class MediaAudio extends EventTarget {
         this.dispatchEvent(new Event("pause"));
     }
 
-    async load(media_src?: string) {
+    load(media_src?: string) {
         if (media_src != null) {
             this.media_src = media_src;
         }
-
         if (!this.media_src) {
             return;
         }
-
-        const data_buffer = await fetch(this.media_src).then((r) => r.arrayBuffer());
-        const audio_buffer = await this.audio_context.decodeAudioData(data_buffer);
-        this.audio_buffer = audio_buffer;
-        this.dispatchEvent(new Event("canplay"));
-        this.dispatchEvent(new Event("canplaythrough"));
+        this.load_promise = fetch(this.media_src)
+            .then((r) => r.arrayBuffer())
+            .then((data_buffer) => this.audio_context.decodeAudioData(data_buffer))
+            .then((audio_buffer) => {
+                this.audio_buffer = audio_buffer;
+                this.dispatchEvent(new Event("canplay"));
+                this.dispatchEvent(new Event("canplaythrough"));
+            })
     }
 }
