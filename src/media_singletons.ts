@@ -3,7 +3,6 @@ import { MediaAudio } from "./media_audio";
 
 // video singleton to be used by all media players
 const video = new Video();
-video.muted = true;
 let should_video_rerender = false;
 const enable_rerender_cb = () => (should_video_rerender = true);
 const disable_rerender_cb = () => (should_video_rerender = false);
