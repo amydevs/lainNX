@@ -4,6 +4,7 @@ export class MediaAudio extends EventTarget {
     audio_buffer: AudioBuffer | null;
     audio_source: AudioBufferSourceNode | null;
     audio_can_play_promise: Promise<void> | null;
+    audio_load_abort_controller: AbortController | null;
     started_at: number;
     resume_time: number;
     constructor(media_src?: string) {
@@ -13,6 +14,7 @@ export class MediaAudio extends EventTarget {
         this.audio_buffer = null;
         this.audio_source = null;
         this.audio_can_play_promise = null;
+        this.audio_load_abort_controller = null;
         this.started_at = 0;
         this.resume_time = 0;
 
@@ -21,14 +23,22 @@ export class MediaAudio extends EventTarget {
         }
     }
 
-    get src(): string | null {
-        return this.media_src;
+    get src(): string {
+        return this.media_src ?? "";
     }
 
-    set src(media_src: string | null) {
+    set src(media_src: string) {
+        if (this.media_src === media_src) {
+            return;
+        }
         this.stopAudio();
-        this.media_src = media_src;
         this.resume_time = 0;
+        this.media_src = media_src;
+        if (media_src.length !== 0) {
+            this.audio_can_play_promise = null;
+            this.audio_load_abort_controller?.abort();
+            this.load()
+        }
     }
 
     get paused(): boolean {
@@ -89,16 +99,12 @@ export class MediaAudio extends EventTarget {
         this.dispatchEvent(new Event("pause"));
     }
 
-    // TODO: abort controller stuff to allow for consecutive loads
-    load(media_src?: string) {
-        if (media_src != null) {
-            this.media_src = media_src;
-        }
-
-        if (!this.media_src) {
+    load() {
+        if (!this.media_src || this.audio_can_play_promise != null) {
             return;
         }
-        this.audio_can_play_promise = fetch(this.media_src)
+        this.audio_load_abort_controller = new AbortController();
+        this.audio_can_play_promise = fetch(this.media_src, { signal: this.audio_load_abort_controller.signal })
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`Failed to load audio file: ${response.status} ${response.statusText}`);
@@ -114,6 +120,9 @@ export class MediaAudio extends EventTarget {
                 this.dispatchEvent(new Event("canplaythrough"));
             })
             .catch((error) => {
+                if (error.name === "AbortError") {
+                    return;
+                }
                 this.dispatchEvent(new ErrorEvent("error", { error }));
             });
     }

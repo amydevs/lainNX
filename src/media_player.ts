@@ -108,36 +108,28 @@ export class MediaPlayer {
         //     this.subtitle_el.textContent = "";
         // }
 
-        if (this.is_audio()) {
-            this.audio.src = media_src;
-            this.audio.load();
-            this.media_can_play_promise = this.audio.audio_can_play_promise;
-            this.reset_and_pause();
-        } else {
-            this.media_can_play_promise = new Promise((resolve, reject) => {
-                const can_play_cb = () => {
-                    this.video.removeEventListener("canplay", can_play_cb);
-                    resolve();
-                };
-                this.video.addEventListener("canplay", can_play_cb, { once: true });
-                const error_cb = (e: unknown) => {
-                    this.video.removeEventListener("error", error_cb);
-                    reject(e);
-                };
-                this.video.addEventListener("error", error_cb, { once: true });
-                // TODO: find a better way of getting around idle scenes not being able to play due to
-                // immediately playing after loading. This is a hacky solution that waits 200ms before resolving the promise.
-                setTimeout(() => {
-                    this.video.removeEventListener("canplay", can_play_cb);
-                    this.video.removeEventListener("error", error_cb);
-                    resolve();
-                }, 200);
-            });
-            const media = this.media;
-            media.src = media_src;
-            media.load();
-            this.reset_and_pause();
-        }
+        this.media_can_play_promise = new Promise((resolve, reject) => {
+            const can_play_cb = () => {
+                this.media.removeEventListener("canplay", can_play_cb);
+                resolve();
+            };
+            this.media.addEventListener("canplay", can_play_cb, { once: true });
+            const error_cb = (e: unknown) => {
+                this.media.removeEventListener("error", error_cb);
+                reject(e);
+            };
+            this.media.addEventListener("error", error_cb, { once: true });
+            // TODO: find a better way of getting around idle scenes not being able to play due to
+            // immediately playing after loading. This is a hacky solution that waits 200ms before resolving the promise.
+            setTimeout(() => {
+                this.media.removeEventListener("canplay", can_play_cb);
+                this.media.removeEventListener("error", error_cb);
+                resolve();
+            }, 200);
+        });
+        this.media.src = media_src;
+        this.media.load();
+        this.reset_and_pause();
 
         // this.track_el = document.createElement("track");
         // this.track_el.id = "track";
