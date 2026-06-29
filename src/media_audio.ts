@@ -4,6 +4,7 @@ export class MediaAudio extends EventTarget {
     audio_context: AudioContext;
     audio_buffer: AudioBuffer | null;
     audio_source: AudioBufferSourceNode | null;
+    audio_source_ended: boolean;
     audio_can_play_promise: Promise<void> | null;
     audio_load_abort_controller: AbortController | null;
     started_at: number;
@@ -14,6 +15,7 @@ export class MediaAudio extends EventTarget {
         this.audio_context = new AudioContext();
         this.audio_buffer = null;
         this.audio_source = null;
+        this.audio_source_ended = false;
         this.audio_can_play_promise = null;
         this.audio_load_abort_controller = null;
         this.started_at = 0;
@@ -52,6 +54,7 @@ export class MediaAudio extends EventTarget {
 
     set currentTime(time: number) {
         this.resume_time = time;
+        this.audio_source_ended = false;
         if (this.paused) {
             return;
         }
@@ -64,6 +67,10 @@ export class MediaAudio extends EventTarget {
         return this.audio_buffer?.duration ?? 0;
     }
 
+    get ended(): boolean {
+        return this.audio_source_ended;
+    }
+
     startAudio(when?: number, offset?: number, duration?: number) {
         if (!this.audio_buffer) {
             return;
@@ -71,6 +78,7 @@ export class MediaAudio extends EventTarget {
         this.stopAudio();
         this.audio_source = this.audio_context.createBufferSource();
         this.audio_source.addEventListener("ended", () => {
+            this.audio_source_ended = true;
             this.dispatchEvent(new Event("ended"));
         });
         this.audio_source.buffer = this.audio_buffer;
@@ -118,6 +126,7 @@ export class MediaAudio extends EventTarget {
             .then((data_buffer) => this.audio_context.decodeAudioData(data_buffer))
             .then((audio_buffer) => {
                 this.audio_buffer = audio_buffer;
+                this.audio_source_ended = false;
                 this.dispatchEvent(new Event("loadedmetadata"));
                 this.dispatchEvent(new Event("canplay"));
                 this.dispatchEvent(new Event("canplaythrough"));
