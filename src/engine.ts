@@ -288,7 +288,25 @@ const LOADED_TEXTURES: THREE.Texture[] = [];
 export function load_texture(img: string): THREE.Texture {
     const image = new Image();
     image.src = img;
-    return new THREE.Texture(image);
+    const texture = new THREE.Texture(image);
+    const error_cb = () => {
+        console.error(`failed to load texture "${img}"`);
+        image.removeEventListener("load", load_cb);
+    };
+    const load_cb = () => {
+        texture.needsUpdate = true;
+        image.removeEventListener("error", error_cb);
+    };
+    image.addEventListener("load", load_cb, { once: true });
+    image.addEventListener("error", error_cb, { once: true });
+    return texture;
+}
+
+export async function load_texture_async(img: string): Promise<THREE.Texture> {
+    const blob = await fetch(img).then((res) => res.blob()) as Blob;
+    const bitmap = await createImageBitmap(blob);
+    const texture = new THREE.Texture(bitmap);
+    return texture;
 }
 
 export function get_texture(texture: Texture): THREE.Texture {
@@ -722,7 +740,7 @@ export class Engine {
 export async function engine_create(): Promise<Engine> {
     const is_debug = import.meta.env.DEV;
 
-    const atlas = load_texture(sprite_atlas);
+    const atlas = await load_texture_async(sprite_atlas);
     atlas.magFilter = THREE.NearestFilter;
     atlas.minFilter = THREE.NearestFilter;
 
@@ -761,47 +779,49 @@ export async function engine_create(): Promise<Engine> {
     const frames_per_atlas = frames_per_row * frames_per_col;
 
     LAPK_ATLASES_TO_LOAD.forEach(async (spritesheet, index) => {
-        const spritesheet_texture = load_texture(spritesheet);
-        for (let r = 0; r < frames_per_row; r++) {
-            for (let c = 0; c < frames_per_col; c++) {
-                const frame_texture = extract_frame(
-                    spritesheet_texture,
-                    lapks_atlas_dim,
-                    lapks_atlas_dim,
-                    c * lapk_w,
-                    r * lapk_h,
-                    lapk_w,
-                    lapk_h,
-                );
+        load_texture_async(spritesheet).then((spritesheet_texture) => {
+            for (let r = 0; r < frames_per_row; r++) {
+                for (let c = 0; c < frames_per_col; c++) {
+                    const frame_texture = extract_frame(
+                        spritesheet_texture,
+                        lapks_atlas_dim,
+                        lapks_atlas_dim,
+                        c * lapk_w,
+                        r * lapk_h,
+                        lapk_w,
+                        lapk_h,
+                    );
 
-                const location = index * frames_per_atlas + r * frames_per_row + c;
-                LOADED_LAPK_FRAMES[location] = frame_texture;
+                    const location = index * frames_per_atlas + r * frames_per_row + c;
+                    LOADED_LAPK_FRAMES[location] = frame_texture;
+                }
             }
-        }
 
-        LOADED_LAPK_ATLASES.push(spritesheet_texture.clone());
+            LOADED_LAPK_ATLASES.push(spritesheet_texture.clone());
+        });
     });
 
     LAPK_TALK_ATLASES_TO_LOAD.forEach((spritesheet, index) => {
-        const spritesheet_texture = load_texture(spritesheet);
-        for (let r = 0; r < frames_per_row; r++) {
-            for (let c = 0; c < frames_per_col; c++) {
-                const frame_texture = extract_frame(
-                    spritesheet_texture,
-                    lapks_atlas_dim,
-                    lapks_atlas_dim,
-                    c * lapk_w,
-                    r * lapk_h,
-                    lapk_w,
-                    lapk_h,
-                );
+        load_texture_async(spritesheet).then((spritesheet_texture) => {
+            for (let r = 0; r < frames_per_row; r++) {
+                for (let c = 0; c < frames_per_col; c++) {
+                    const frame_texture = extract_frame(
+                        spritesheet_texture,
+                        lapks_atlas_dim,
+                        lapks_atlas_dim,
+                        c * lapk_w,
+                        r * lapk_h,
+                        lapk_w,
+                        lapk_h
+                    );
 
-                const location = index * frames_per_atlas + r * frames_per_row + c;
-                LOADED_LAPK_TALK_FRAMES[location] = frame_texture;
+                    const location = index * frames_per_atlas + r * frames_per_row + c;
+                    LOADED_LAPK_TALK_FRAMES[location] = frame_texture;
+                }
             }
-        }
 
-        LOADED_LAPK_TALK_ATLASES.push(spritesheet_texture.clone());
+            LOADED_LAPK_TALK_ATLASES.push(spritesheet_texture.clone());
+        });
     });
 
     // preload audio
