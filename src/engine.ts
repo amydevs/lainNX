@@ -275,6 +275,24 @@ function all_audio_loaded(): boolean {
 //     return Math.sqrt(rms / buffer.length);
 // }
 
+// TODO: remove this once audiocontext analyser is working properly
+export function get_audio_random_frequency_data(t? : number, size?: number): Uint8Array {
+    let data_size = size ?? 1024;
+    const seconds = (t ?? Date.now()) / 1000;
+    const data = new Uint8Array(data_size);
+    for (let i = 0; i < data_size; i++) {
+        data[i] = (Math.sin(seconds + i * 0.1) + 1) * 128;
+    }
+    return data;
+}
+
+export function get_audio_random_rms(t?: number): number {
+    const seconds = (t ?? Date.now()) / 1000;
+    const wave = 0.5 + 0.5 * Math.sin(seconds * 2.5);
+    const noise = (Math.random() - 0.5) * 10;
+    return 128 + wave * 40 + noise;
+}
+
 // texture globals
 export type TextureDimensions = {
     x: number;
