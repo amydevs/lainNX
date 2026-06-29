@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { MediaAudio } from "./media_audio";
 
-function get_box_size_for_z(face_z: number, camera: THREE.PerspectiveCamera): [number, number, number] {
+function get_scale_for_z(face_z: number, camera: THREE.PerspectiveCamera): [number, number, number] {
     const height = 2 * Math.tan(((camera.fov / 2) * Math.PI) / 180) * face_z;
     const width = height * camera.aspect;
     const depth = 2 * (camera.position.z - face_z);
@@ -46,8 +46,7 @@ export function update_video_texture(camera: THREE.PerspectiveCamera): void {
     if (!should_video_rerender) {
         return;
     }
-    const face_z = 50;
-    video_mesh.scale.set(...get_box_size_for_z(face_z, camera));
+    video_mesh.scale.set(...get_scale_for_z(50, camera));
     canvas_ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas_texture.needsUpdate = true;
 }
