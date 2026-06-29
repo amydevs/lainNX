@@ -1,4 +1,5 @@
 // TODO: timeupdate event not being dispatched
+
 export class MediaAudio extends EventTarget {
     media_src: string | null;
     audio_context: AudioContext;
@@ -71,7 +72,7 @@ export class MediaAudio extends EventTarget {
         return this.audio_source_ended;
     }
 
-    startAudio(when?: number, offset?: number, duration?: number) {
+    startAudio(when?: number, offset?: number, duration?: number): void {
         if (!this.audio_buffer) {
             return;
         }
@@ -87,21 +88,22 @@ export class MediaAudio extends EventTarget {
         this.started_at = this.audio_context.currentTime - (offset ?? 0);
     }
 
-    stopAudio() {
+    stopAudio(): void {
         this.audio_source?.stop();
         this.audio_source?.disconnect();
         this.audio_source = null;
     }
 
-    play() {
+    play(): Promise<void> {
         if (!this.paused) {
-            return;
+            return Promise.resolve();
         }
         this.startAudio(0, this.resume_time);
         this.dispatchEvent(new Event("play"));
+        return Promise.resolve();
     }
 
-    pause() {
+    pause(): void {
         if (this.paused) {
             return;
         }
@@ -110,7 +112,7 @@ export class MediaAudio extends EventTarget {
         this.dispatchEvent(new Event("pause"));
     }
 
-    load() {
+    load(): void {
         if (!this.media_src || this.audio_can_play_promise != null) {
             return;
         }

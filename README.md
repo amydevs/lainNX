@@ -31,6 +31,7 @@ Note that currently the extraction script doesn't extract SFX, but the game stil
 
 - **Finish writing the extraction script**
 - **Improve/complete the translation**
+- **Cleanup code to be more consistent with rest of app**
 - **Fix crashes after trying to load videos after sleeping (`nx.js` issue)**
 - **Fix audio media scene visualiser not working as audio analysis is not supported (`nx.js` upstream issue, currently polyfilled with random data)**
 - **Fix emote wheel**
