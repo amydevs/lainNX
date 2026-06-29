@@ -177,6 +177,9 @@ export class MediaPlayer {
     }
 
     get_elapsed_percentage(): number {
+        if (this.media.ended) {
+            return 100;
+        }
         if (this.is_media_audio) {
             if (this.audio.duration > 0) {
                 const pct = (this.audio.currentTime / this.audio.duration) * 100;
