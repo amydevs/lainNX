@@ -1,6 +1,13 @@
 import * as THREE from "three";
 import { MediaAudio } from "./media_audio";
 
+function get_scale_for_z(face_z: number, camera: THREE.PerspectiveCamera): [number, number, number] {
+    const height = 2 * Math.tan(((camera.fov / 2) * Math.PI) / 180) * face_z;
+    const width = height * camera.aspect;
+    const depth = 2 * (camera.position.z - face_z);
+    return [width, height, depth];
+}
+
 // video singleton to be used by all media players
 const video = new Video();
 let should_video_rerender = false;
@@ -39,11 +46,7 @@ export function update_video_texture(camera: THREE.PerspectiveCamera): void {
     if (!should_video_rerender) {
         return;
     }
-    const height = 40;
-    const width = height * camera.aspect;
-    const face_z = height / 2 / Math.tan(((camera.fov / 2) * Math.PI) / 180);
-    const depth = 2 * (face_z - camera.position.z) * -1;
-    video_mesh.scale.set(width, height, depth);
+    video_mesh.scale.set(...get_scale_for_z(50, camera));
     canvas_ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas_texture.needsUpdate = true;
 }
