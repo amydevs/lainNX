@@ -89,6 +89,7 @@ export class MediaAudio extends EventTarget {
         this.dispatchEvent(new Event("pause"));
     }
 
+    // TODO: abort controller stuff to allow for consecutive loads
     load(media_src?: string) {
         if (media_src != null) {
             this.media_src = media_src;
