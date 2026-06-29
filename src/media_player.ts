@@ -41,7 +41,7 @@ export function get_voice_syllable_path(syllable: string): string {
 export class MediaPlayer {
     video: Video;
     audio: MediaAudio;
-    _is_audio: boolean;
+    is_media_audio: boolean;
     media_can_play_promise: Promise<void> | null;
     subtitles_can_play_promise: Promise<void> | null;
     subtitles_fetch_abort_controller: AbortController | null;
@@ -54,7 +54,7 @@ export class MediaPlayer {
     constructor(media_src?: string, track_src?: string) {
         this.video = get_video();
         this.audio = get_media_audio();
-        this._is_audio = false;
+        this.is_media_audio = false;
         this.media_can_play_promise = null;
         this.subtitles_can_play_promise = null;
         this.subtitles_fetch_abort_controller = null;
@@ -78,12 +78,12 @@ export class MediaPlayer {
     }
 
     get media(): Video | MediaAudio {
-        return this._is_audio ? this.audio : this.video;
+        return this.is_media_audio ? this.audio : this.video;
     }
 
     // TODO: hacky way to determine if media is audio or video, fix this at some point
     is_audio(): boolean {
-        return this._is_audio;
+        return this.is_media_audio;
     }
 
     is_paused(): boolean {
@@ -109,10 +109,10 @@ export class MediaPlayer {
 
     load(media_src: string, track_src?: string): void {
         if (media_src.startsWith(`${__ROOT_PATH__}/media/audio/`)) {
-            this._is_audio = true;
+            this.is_media_audio = true;
             this.video.src = "";
         } else {
-            this._is_audio = false;
+            this.is_media_audio = false;
             this.audio.src = "";
         }
         // TODO: re-enable subtitle support
@@ -177,7 +177,7 @@ export class MediaPlayer {
     }
 
     get_elapsed_percentage(): number {
-        if (this._is_audio) {
+        if (this.is_media_audio) {
             if (this.audio.duration > 0) {
                 const pct = (this.audio.currentTime / this.audio.duration) * 100;
                 return Math.min(100, Math.ceil(pct));
