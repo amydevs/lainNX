@@ -53,10 +53,13 @@ export class MediaAudio extends EventTarget {
 
     startAudio(when?: number, offset?: number, duration?: number) {
         if (!this.audio_buffer) {
-            throw new Error("audio buffer was not set before calling audio_start");
+            return;
         }
         this.stopAudio();
         this.audio_source = this.audio_context.createBufferSource();
+        this.audio_source.addEventListener("ended", () => {
+            this.dispatchEvent(new Event("ended"));
+        });
         this.audio_source.buffer = this.audio_buffer;
         this.audio_source.connect(this.audio_context.destination);
         this.audio_source.start(when, offset, duration);
@@ -95,12 +98,22 @@ export class MediaAudio extends EventTarget {
             return;
         }
         this.audio_can_play_promise = fetch(this.media_src)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Failed to load audio file: ${response.status} ${response.statusText}`);
+                }
+                return response;
+            })
             .then((r) => r.arrayBuffer())
             .then((data_buffer) => this.audio_context.decodeAudioData(data_buffer))
             .then((audio_buffer) => {
                 this.audio_buffer = audio_buffer;
+                this.dispatchEvent(new Event("loadedmetadata"));
                 this.dispatchEvent(new Event("canplay"));
                 this.dispatchEvent(new Event("canplaythrough"));
+            })
+            .catch((error) => {
+                this.dispatchEvent(new ErrorEvent("error", { error }));
             });
     }
 }
