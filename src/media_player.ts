@@ -158,10 +158,16 @@ export class MediaPlayer {
     }
 
     get_elapsed_percentage(): number {
-        const media = this.media;
-        if (media.duration > 0) {
-            const pct = (media.currentTime / media.duration) * 100;
-            return Math.min(100, Math.ceil(pct));
+        if (this._is_audio) {
+            if (this.audio.duration > 0) {
+                const pct = (this.audio.currentTime / this.audio.duration) * 100;
+                return Math.min(100, Math.ceil(pct));
+            }
+        } else {
+            if (this.video.readyState >= 1 && this.video.duration > 0) {
+                const pct = (this.video.currentTime / this.video.duration) * 100;
+                return Math.min(100, Math.ceil(pct));
+            }
         }
 
         return 0;
