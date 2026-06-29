@@ -50,7 +50,7 @@ export function update_video_mesh(camera: THREE.PerspectiveCamera): void {
     if (!should_video_rerender) {
         return;
     }
-    place_plane_for_z(video_mesh, 10, camera);
+    place_plane_for_z(video_mesh, 20, camera);
     video_canvas_ctx.drawImage(video, 0, 0, video_canvas.width, video_canvas.height);
     video_texture.needsUpdate = true;
 }
@@ -107,6 +107,7 @@ export function get_active_cues(): Set<Cue> {
 }
 
 export function set_cues(new_cues: Cue[]): void {
+    should_subtitle_rerender = true;
     cues_by_start = [...new_cues].sort((a, b) => a.start - b.start);
     cues_by_end = [...new_cues].sort((a, b) => a.end - b.end);
     active_cues.clear();
@@ -117,13 +118,14 @@ export function set_cues(new_cues: Cue[]): void {
 
 const subtitles_canvas = new OffscreenCanvas(640, 480);
 const subtitles_canvas_ctx = subtitles_canvas.getContext("2d");
-const font_px = 24;
+const font_px = 22;
 const line_height = 1.2 * font_px;
+const background_padding_x_px = (line_height - font_px) / 2;
+const max_width_px = subtitles_canvas.width - 50;
 subtitles_canvas_ctx.font = `${font_px}px system-ui`;
 subtitles_canvas_ctx.textAlign = "center";
 // to initialize letterspacing for uwrap
 (subtitles_canvas_ctx as any).letterSpacing = "0px";
-console.debug(`${subtitles_canvas_ctx.measureText("test").width}`);
 const { split } = varPreLine(subtitles_canvas_ctx as unknown as CanvasRenderingContext2D);
 const subtitles_texture = new THREE.CanvasTexture(subtitles_canvas);
 subtitles_texture.minFilter = THREE.LinearFilter;
@@ -133,8 +135,11 @@ const subtitles_mesh = new THREE.Mesh(
     new THREE.MeshBasicMaterial({
         map: subtitles_texture,
         transparent: true,
+        depthTest: false,
     }),
 );
+// must stay on top
+subtitles_mesh.renderOrder = Number.MAX_SAFE_INTEGER;
 export function get_subtitles_mesh(): THREE.Mesh {
     return subtitles_mesh;
 }
@@ -143,24 +148,30 @@ export function update_subtitles_mesh(camera: THREE.PerspectiveCamera): void {
     if (!should_subtitle_rerender) {
         return;
     }
-    place_plane_for_z(subtitles_mesh, 1, camera);
+    // anything below 2 blocks the progress lines
+    place_plane_for_z(subtitles_mesh, 10, camera);
     subtitles_canvas_ctx.clearRect(0, 0, subtitles_canvas.width, subtitles_canvas.height);
     for (const cue of active_cues) {
-        const lines = split(cue.text, subtitles_canvas.width * 0.75);
-        for (const [i, line] of lines.entries()) {
-            const line_x = subtitles_canvas.width / 2;
-            const line_y = subtitles_canvas.height - (lines.length - i) * line_height;
-            const line_length = subtitles_canvas_ctx.measureText(line);
-            const background_padding_x_px = (line_height - font_px) / 2;
-            subtitles_canvas_ctx.fillStyle = "black";
+        const lines = split(cue.text, max_width_px)
+            .reverse()
+            .map((text, index) => ({
+                text,
+                x: subtitles_canvas.width / 2,
+                y: subtitles_canvas.height - (index + 1) * line_height,
+                width: subtitles_canvas_ctx.measureText(text).width
+            }));
+        subtitles_canvas_ctx.fillStyle = "black";
+        for (const line of lines) {
             subtitles_canvas_ctx.fillRect(
-                line_x - line_length.width / 2 - background_padding_x_px,
-                line_y - font_px,
-                line_length.width + background_padding_x_px * 2,
+                line.x - line.width / 2 - background_padding_x_px,
+                line.y - font_px,
+                line.width + background_padding_x_px * 2,
                 line_height,
             );
-            subtitles_canvas_ctx.fillStyle = "white";
-            subtitles_canvas_ctx.fillText(line, line_x, line_y);
+        }
+        subtitles_canvas_ctx.fillStyle = "white";
+        for (const line of lines) {
+            subtitles_canvas_ctx.fillText(line.text, line.x, line.y);
         }
     }
     subtitles_texture.needsUpdate = true;

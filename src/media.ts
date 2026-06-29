@@ -403,7 +403,7 @@ function handle_keys(
     progress: Progress,
     key_states: boolean[],
     camera: THREE.Camera,
-    time_ctx: TimeContext
+    time_ctx: TimeContext,
 ): SceneUpdateResult {
     const { time } = time_ctx;
 
@@ -678,7 +678,9 @@ export class MediaBackgroundImages extends Sprite2D {
         const textures: THREE.Texture[] = [];
         table_indices.forEach((image_index) => {
             if (image_index !== null) {
-                textures.push(load_texture(`${__ROOT_PATH__}/media-background-images/${site}/${image_index}.png`));
+                textures.push(
+                    load_texture(`${__ROOT_PATH__}/media-background-images/${site}/${image_index}.png`),
+                );
             }
         });
 
@@ -838,7 +840,6 @@ export class MediaScene extends THREE.Scene {
             this.audio_visualizer_columns = create_audio_visualizer_columns();
 
             group.add(this.lof_icon, ...this.audio_visualizer_columns, this.images);
-            this.add(get_subtitles_mesh());
         } else {
             this.player = new MediaPlayer(get_video_media_file_path(node.media_file), track_path);
             this.add(get_video_mesh());
@@ -852,7 +853,7 @@ export class MediaScene extends THREE.Scene {
 
         this.is_viewing_endroll = false;
 
-        this.add(this.scene_group);
+        this.add(this.scene_group, get_subtitles_mesh());
     }
 }
 
