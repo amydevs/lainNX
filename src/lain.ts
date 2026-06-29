@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import lain_animations_json from "./static/json/lain_animations.json";
 import lain_talk_animations_json from "./static/json/lain_talk_animations.json";
-import { get_lapk, get_talk_lapk, TimeContext } from "./engine";
+import { get_audio_random_rms, get_lapk, get_talk_lapk, TimeContext } from "./engine";
 import { random_from, secs_to_ms } from "./util";
 import { Sprite2D, Vec3 } from "./objects";
 
@@ -184,17 +184,17 @@ function get_lain_talk_animation_frame(kind: LainTalkAnimationKind, frame_number
 }
 
 // TODO: audio analyser
-// function get_lain_talk_frame_for_rms(rms: number): THREE.Texture {
-//     if (rms >= 130) {
-//         return get_talk_lapk(0);
-//     } else if (rms >= 129 && rms <= 130) {
-//         return get_talk_lapk(33);
-//     } else if (rms > 128 && rms <= 129) {
-//         return get_talk_lapk(32);
-//     } else {
-//         return get_talk_lapk(31);
-//     }
-// }
+function get_lain_talk_frame_for_rms(rms: number): THREE.Texture {
+    if (rms >= 130) {
+        return get_talk_lapk(0);
+    } else if (rms >= 129 && rms <= 130) {
+        return get_talk_lapk(33);
+    } else if (rms > 128 && rms <= 129) {
+        return get_talk_lapk(32);
+    } else {
+        return get_talk_lapk(31);
+    }
+}
 
 type LainTalkUpdateResult = {
     finished_animation: LainTalkAnimationKind | null;
@@ -258,7 +258,7 @@ export class LainTalk extends Sprite2D {
                 break;
             case LainTalkAnimationKind.None:
                 // TODO: audio analyser
-                // this.material.map = get_lain_talk_frame_for_rms(get_audio_analyser_rms());
+                this.material.map = get_lain_talk_frame_for_rms(get_audio_random_rms(time));
                 break;
         }
 
