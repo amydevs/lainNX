@@ -1,3 +1,4 @@
+// TODO: timeupdate event not being dispatched
 export class MediaAudio extends EventTarget {
     media_src: string | null;
     audio_context: AudioContext;
@@ -54,7 +55,9 @@ export class MediaAudio extends EventTarget {
         if (this.paused) {
             return;
         }
+        this.dispatchEvent(new Event("seeking"));
         this.startAudio(0, time);
+        this.dispatchEvent(new Event("seeked"));
     }
 
     get duration(): number {
