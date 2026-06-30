@@ -27,11 +27,6 @@ export function get_fullscreen_media_subtitles(): FullscreenMediaSubtitles3D {
 
 // ============================ end of resources
 
-export function update_media_player(camera: THREE.PerspectiveCamera) {
-    FULLSCREEN_MEDIA_SUBTITLES.update(camera);
-    FULLSCREEN_MEDIA_VIDEO.update(camera);
-}
-
 export function get_audio_media_file_path(media_file: string): string {
     return `${__ROOT_PATH__}/media/audio/${media_file}.mp4`;
 }

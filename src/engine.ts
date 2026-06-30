@@ -51,7 +51,7 @@ import { get_saved_state, GameState } from "./save";
 import { TaKScene, update_tak_scene } from "./tak";
 import { LoadingScene, update_loading_scene } from "./loading";
 import { Button } from "@nx.js/constants";
-import { update_media_player } from "./media_player";
+import { get_fullscreen_media_subtitles, get_fullscreen_media_video } from "./media_player";
 
 const W = 800;
 const H = 600;
@@ -741,7 +741,8 @@ export class Engine {
                 this.renderer.setViewport(x, y, w, h);
                 this.renderer.setScissor(x, y, w, h);
                 this.renderer.setScissorTest(true);
-                update_media_player(this.camera);
+                get_fullscreen_media_subtitles().update(this.camera);
+                get_fullscreen_media_video().update(this.camera);
                 this.renderer.render(this.scene, this.camera);
             }
 
