@@ -36,6 +36,7 @@
         "@flatten-js/interval-tree": "^2.0.3",
         "@nx.js/constants": "^0.4.1",
         "@nx.js/nsp": "^1.0.0-beta.5",
+        "@zip.js/zip.js": "^2.8.26",
         "canvas-txt": "^4.1.1",
         "subtitle": "^4.2.2",
         "three": "^0.162.0",
