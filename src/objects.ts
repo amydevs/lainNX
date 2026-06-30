@@ -967,6 +967,7 @@ export class FullscreenMediaSubtitles3D extends Fullscreen3D {
         this.max_width_px = this.canvas.width - 50;
         this.canvas_ctx.font = `${this.font_px}px system-ui`;
         this.canvas_ctx.textAlign = "center";
+        this.canvas_ctx.textBaseline = "middle";
         (this.canvas_ctx as any).letterSpacing = "0px";
         this.split = uWrap.varPreLine(this.canvas_ctx as unknown as CanvasRenderingContext2D).split;
 
@@ -1032,24 +1033,34 @@ export class FullscreenMediaSubtitles3D extends Fullscreen3D {
         for (const cue of this.active_cues) {
             const lines = this.split(cue.text, this.max_width_px)
                 .reverse()
-                .map((text, index) => ({
-                    text,
-                    x: this.canvas.width / 2,
-                    y: this.canvas.height - (index + 1) * this.line_height_px,
-                    width: this.canvas_ctx.measureText(text).width,
-                }));
+                .map((text, index) => {
+                    const text_width = this.canvas_ctx.measureText(text).width;
+                    const bottom_margin_px = this.line_height_px
+                    const text_x = this.canvas.width / 2;
+                    const text_y = this.canvas.height - bottom_margin_px - (index + 0.5) * this.line_height_px;
+
+                    return {
+                        text,
+                        text_x,
+                        text_y,
+                        bg_x: text_x - text_width / 2 - this.background_padding_x_px,
+                        bg_y: text_y - this.line_height_px / 2,
+                        bg_w: text_width + this.background_padding_x_px * 2,
+                        bg_h: this.line_height_px,
+                    };
+                });
             this.canvas_ctx.fillStyle = "black";
             for (const line of lines) {
                 this.canvas_ctx.fillRect(
-                    line.x - line.width / 2 - this.background_padding_x_px,
-                    line.y - this.font_px,
-                    line.width + this.background_padding_x_px * 2,
-                    this.line_height_px,
+                    line.bg_x,
+                    line.bg_y,
+                    line.bg_w,
+                    line.bg_h
                 );
             }
             this.canvas_ctx.fillStyle = "white";
             for (const line of lines) {
-                this.canvas_ctx.fillText(line.text, line.x, line.y);
+                this.canvas_ctx.fillText(line.text, line.text_x, line.text_y);
             }
         }
         this.canvas_texture.needsUpdate = true;
