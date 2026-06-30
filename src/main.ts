@@ -1,68 +1,9 @@
 import { type Engine, engine_create } from "./engine";
 import { check_if_legacy_save_and_upgrade } from "./save";
-
-// nx setup stuff
-// polyfill for threejs gltfloader
-Object.defineProperty(globalThis, "self", {
-    value: window,
-    writable: false,
-    configurable: false,
-    enumerable: true,
-});
-// polyfill for three.js audio and video stuff
-Object.defineProperty(window, "HTMLVideoElement", {
-    value: Video,
-    writable: false,
-    configurable: false,
-    enumerable: true,
-});
-Object.defineProperty(window, "HTMLAudioElement", {
-    value: Audio,
-    writable: false,
-    configurable: false,
-    enumerable: true,
-});
-// polyfill for console methods
-for (const k of ["log", "warn", "info", "error", "debug"]) {
-    Object.defineProperty(console, k, {
-        value: console.debug.bind(console, `[${k.toUpperCase()}]`),
-        writable: false,
-        configurable: false,
-        enumerable: true,
-    });
-}
-// profile selection
-let profile = Switch.Profile.current;
-while (profile == null) {
-    profile = Switch.Profile.select();
-}
-Switch.Profile.current = profile;
-// control handling
-function update_controls(engine: Engine) {
-    const pads = navigator.getGamepads();
-    const player_one = pads[0];
-    if (player_one) {
-        // Handle gamepad controls
-        for (const [i, button] of player_one.buttons.entries()) {
-            const i_str = i.toString();
-            const is_repeat_pressed = engine.pressed_keys.has(i_str);
-            if (!is_repeat_pressed && button.pressed) {
-                engine.pressed_keys.add(i_str);
-            } else if (is_repeat_pressed && !button.pressed) {
-                engine.pressed_keys.delete(i_str);
-            }
-            const psx_key = engine.key_mappings[i];
-            if (psx_key != null && !is_repeat_pressed && button.pressed) {
-                engine.key_states[psx_key] = true;
-            }
-        }
-    }
-}
-window.addEventListener("beforeunload", (event) => {
-    event.preventDefault();
-});
+import { init } from "./init";
 
 (async () => {
+    await init();
     check_if_legacy_save_and_upgrade();
 
     let is_page_visible = true;
@@ -72,6 +13,27 @@ window.addEventListener("beforeunload", (event) => {
     let time_paused = 0;
 
     const engine = await engine_create();
+
+    function update_controls(engine: Engine) {
+        const pads = navigator.getGamepads();
+        const player_one = pads[0];
+        if (player_one) {
+            // Handle gamepad controls
+            for (const [i, button] of player_one.buttons.entries()) {
+                const i_str = i.toString();
+                const is_repeat_pressed = engine.pressed_keys.has(i_str);
+                if (!is_repeat_pressed && button.pressed) {
+                    engine.pressed_keys.add(i_str);
+                } else if (is_repeat_pressed && !button.pressed) {
+                    engine.pressed_keys.delete(i_str);
+                }
+                const psx_key = engine.key_mappings[i];
+                if (psx_key != null && !is_repeat_pressed && button.pressed) {
+                    engine.key_states[psx_key] = true;
+                }
+            }
+        }
+    }
 
     function animate(): void {
         if (!is_page_visible) {
