@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import { type Node, parseSync as parseVttSync } from "subtitle";
 import { get_user_language } from "./engine";
 import { MediaAudio } from "./media_audio";

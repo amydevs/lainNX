@@ -937,7 +937,6 @@ export class FullscreenMediaSubtitles3D extends Fullscreen3D {
     background_padding_x_px: number;
     max_width_px: number;
     split: uWrap.Split;
-    
 
     constructor(video: Video, media_audio: MediaAudio, params: FullscreenMediaSubtitles3DParameters) {
         const canvas = new OffscreenCanvas(640, 480);
@@ -963,7 +962,7 @@ export class FullscreenMediaSubtitles3D extends Fullscreen3D {
         this.canvas_ctx = this.canvas.getContext("2d");
 
         this.font_px = 22;
-        this.line_height_px = 1.2 * this.font_px;
+        this.line_height_px = 1.5 * this.font_px;
         this.background_padding_x_px = (this.line_height_px - this.font_px) / 2;
         this.max_width_px = this.canvas.width - 50;
         this.canvas_ctx.font = `${this.font_px}px system-ui`;
