@@ -23,6 +23,19 @@ export async function init() {
         configurable: false,
         enumerable: true,
     });
+    // polyfill for console methods
+    for (const k of ["log", "warn", "info", "error"] as const) {
+        const original = console[k].bind(console);
+        Object.defineProperty(console, k, {
+            value: (...args: any[]) => {
+                console.debug(...args);
+                original(...args);
+            },
+            writable: false,
+            configurable: false,
+            enumerable: true,
+        });
+    }
 
     // profile selection
     let profile = Switch.Profile.current;
@@ -36,15 +49,25 @@ export async function init() {
         console.log(
             `found compressed files at ${compressed_files_path}, extracting (this might take a while)...`,
         );
+        console.log(`if you find this process too slow, you may also extract the files in "laingame.com" manually to ${__ROOT_PATH__}`)
+        console.debug(`started extraction at ${new Date().toISOString()}`);
         Switch.setMediaPlaybackState(true);
-        console.log(`disabled sleep whilst extracting files...`);
+        console.log("disabled sleep whilst extracting files");
+        console.log("docking is recommended whilst this happens, ESPECIALLY IF YOU HAVE AN OLED SWITCH IN CASE OF BURN-IN");
+        console.log("if you need to dock your switch, please restart LainNX after doing so as a bug will cause the extraction to fail if you dock mid-extraction");
         let compressed_files = Switch.file(compressed_files_path);
         const compressed_files_stream = compressed_files.stream();
         const reader = new zip.ZipReader(compressed_files.stream(), {
             useCompressionStream: true,
         });
+        let total = 0;
+        const entries_stream = reader.getEntriesGenerator({
+            onprogress: (_p, t) => { total = t },
+        });
         const file_name_filter_regex = /^(assets|emote-wheel|images|json|media|media-background-images|sfx|voice|webvtt)/;
-        for await (const entry of reader.getEntriesGenerator()) {
+        let i = 0;
+        for await (const entry of entries_stream) {
+            i++;
             if (!entry.filename.match(file_name_filter_regex)) {
                 continue;
             }
@@ -52,7 +75,7 @@ export async function init() {
             let new_file_path =`${__ROOT_PATH__}/${entry.filename}`;
 
             if ((await Switch.stat(new_file_path)) != null) {
-                console.log(`skipping ${entry.filename}, already exists`);
+                console.log(`${i}/${total} skipping ${entry.filename}, already exists (${i}/${total})`);
                 continue;
             }
 
@@ -60,17 +83,19 @@ export async function init() {
                 await Switch.mkdir(new_file_path);
                 continue;
             }
+            console.log(`extracting ${new_file_path} (${i}/${total})`);
             const new_file = Switch.file(new_file_path);
             await entry.getData(new_file.writable);
             await new_file.writable.close().catch(() => {});
-            console.log(`extracted ${new_file_path}`);
         }
         await compressed_files_stream.cancel().catch(() => {});
         const new_compressed_files_path = `${compressed_files_path}.old`;
+        console.debug(`finished extraction at ${new Date().toISOString()}`);
         console.log(`extracted all files, renaming compressed files from ${compressed_files_path} to ${new_compressed_files_path}...`);
         await Switch.rename(compressed_files_path, new_compressed_files_path);
+        console.log(`rename complete, you may delete ${new_compressed_files_path} if you wish to free up space`);
         Switch.setMediaPlaybackState(true);
-        console.log(`reenabled sleep after extracting files...`);
+        console.log(`reenabled sleep after extracting files`);
     }
 
     console.log(
@@ -95,14 +120,4 @@ export async function init() {
     window.addEventListener("beforeunload", (event) => {
         event.preventDefault();
     });
-
-    // polyfill for console methods
-    for (const k of ["log", "warn", "info", "error", "debug"]) {
-        Object.defineProperty(console, k, {
-            value: console.debug.bind(console),
-            writable: false,
-            configurable: false,
-            enumerable: true,
-        });
-    }
 }
