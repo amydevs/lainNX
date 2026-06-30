@@ -75,11 +75,9 @@ export async function init() {
         await Switch.remove(compressed_files_path);
     }
 
-    // control handling
-
-    // window.addEventListener("beforeunload", (event) => {
-    //     event.preventDefault();
-    // });
+    window.addEventListener("beforeunload", (event) => {
+        event.preventDefault();
+    });
 
     // polyfill for console methods
     for (const k of ["log", "warn", "info", "error", "debug"]) {
