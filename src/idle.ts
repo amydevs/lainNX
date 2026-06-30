@@ -2,8 +2,9 @@ import {
     get_audio_media_file_path,
     get_track_path,
     get_video_media_file_path,
-    get_video_mesh,
+    get_fullscreen_media_video,
     MediaPlayer,
+    get_fullscreen_media_subtitles,
 } from "./media_player";
 import * as THREE from "three";
 import { CursorLocation, SiteKind, SiteScene } from "./site";
@@ -13,7 +14,6 @@ import { get_node_data, NodeID, set_node_as_viewed } from "./node";
 import { MediaBackgroundImages } from "./media";
 import { PolytanPartProgress } from "./save";
 import { are_all_polytan_parts_unlocked } from "./polytan";
-import { get_subtitles_mesh } from "./media_singletons";
 
 type VideoIdleMedia = {
     media_file: string;
@@ -170,9 +170,9 @@ export class IdleScene extends THREE.Scene {
             this.media_player = new MediaPlayer(get_video_media_file_path(media_file));
             this.images = null;
             this.node_id = null;
-            this.add(get_video_mesh());
+            this.add(get_fullscreen_media_video());
         }
-        this.add(get_subtitles_mesh());
+        this.add(get_fullscreen_media_subtitles());
 
         this.failed_to_load = false;
 
