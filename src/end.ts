@@ -13,6 +13,7 @@ import { animate_light_intensity, create_point_light, Group, Mesh, Sprite3D, Spr
 import { LainTalk, LainTalkAnimationKind } from "./lain";
 import {
     get_audio_media_file_path,
+    get_fullscreen_media_subtitles,
     get_track_path,
     get_voice_syllable_path,
     MediaPlayer,
@@ -23,7 +24,6 @@ import { BootScene } from "./boot";
 import { SiteKind } from "./site";
 import { get_current_location, save_state } from "./save";
 import { ChangeSiteScene } from "./change_site";
-import { get_subtitles_mesh } from "./media_singletons";
 
 function get_syllable_filenames(player_name: string): string[] {
     const { translation_table, vowels, voice_file_list } = voice_json;
@@ -353,7 +353,7 @@ export class EndScene extends THREE.Scene {
             create_point_light({ intensity: 8, position: vec3(0, 0, 1) }),
             this.back_light,
             this.selection,
-            get_subtitles_mesh(),
+            get_fullscreen_media_subtitles(),
         );
     }
 }

@@ -38,12 +38,12 @@ import {
     get_audio_media_file_path,
     get_track_path,
     get_video_media_file_path,
-    get_video_mesh,
+    get_fullscreen_media_video,
     MediaPlayer,
+    get_fullscreen_media_subtitles,
 } from "./media_player";
 import { Progress, save_state } from "./save";
 import { EndScene } from "./end";
-import { get_subtitles_mesh } from "./media_singletons";
 
 enum MediaSide {
     Left,
@@ -842,7 +842,7 @@ export class MediaScene extends THREE.Scene {
             group.add(this.lof_icon, ...this.audio_visualizer_columns, this.images);
         } else {
             this.player = new MediaPlayer(get_video_media_file_path(node.media_file), track_path);
-            this.add(get_video_mesh());
+            this.add(get_fullscreen_media_video());
 
             this.words = null;
             this.images = null;
@@ -853,7 +853,7 @@ export class MediaScene extends THREE.Scene {
 
         this.is_viewing_endroll = false;
 
-        this.add(this.scene_group, get_subtitles_mesh());
+        this.add(this.scene_group, get_fullscreen_media_subtitles());
     }
 }
 

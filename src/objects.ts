@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import * as uWrap from "uwrap";
 import {
     ModelKind,
     SPRITE_ATLAS_DIM,
@@ -11,6 +12,8 @@ import {
 import { euler, extract_frame, vec3 } from "./util";
 import { Texture } from "./textures";
 import sprite_atlas_json from "./static/json/sprite_atlas.json";
+import { MediaAudio } from "./media_audio";
+import { Cue } from "subtitle";
 
 export type Vec3 = THREE.Vector3;
 
@@ -120,7 +123,7 @@ type AnimationProps = {
 function animate_curved_position(
     object: THREE.Object3D,
     animation_data: CurvedPositionAnimation,
-    delta: number
+    delta: number,
 ): boolean {
     if (animation_data.progress_on_curve === undefined) {
         animation_data.progress_on_curve = 0;
@@ -293,14 +296,14 @@ class AnimationController {
                     relative_scale_animation.target = vec3(
                         object.scale.x * multiplier.x,
                         object.scale.y * multiplier.y,
-                        object.scale.z * multiplier.z
+                        object.scale.z * multiplier.z,
                     );
                 }
 
                 relative_scale_animation_done = animate_object_scale(
                     object,
                     relative_scale_animation.target,
-                    speed * delta
+                    speed * delta,
                 );
             }
         }
@@ -338,7 +341,7 @@ class AnimationController {
                 curved_position_animation_done = animate_curved_position(
                     object,
                     curved_position_animation,
-                    delta
+                    delta,
                 );
             }
         }
@@ -494,7 +497,7 @@ export class Sprite3D extends THREE.Mesh<THREE.PlaneGeometry, Sprite3DMaterial> 
             material_kind = Sprite3DMaterialKind.Basic,
             side = THREE.FrontSide,
             color = 0xffffff,
-        }: Sprite3DParameters
+        }: Sprite3DParameters,
     ) {
         const texture = get_texture(textures);
 
@@ -506,7 +509,7 @@ export class Sprite3D extends THREE.Mesh<THREE.PlaneGeometry, Sprite3DMaterial> 
                         map: texture,
                         side,
                         color,
-                    })
+                    }),
                 );
                 break;
             case Sprite3DMaterialKind.Basic:
@@ -517,7 +520,7 @@ export class Sprite3D extends THREE.Mesh<THREE.PlaneGeometry, Sprite3DMaterial> 
                         map: texture,
                         side,
                         color,
-                    })
+                    }),
                 );
                 break;
         }
@@ -601,7 +604,7 @@ export class Spritesheet3D extends THREE.Mesh<THREE.PlaneGeometry, Sprite3DMater
             columns,
             frame_update_rate,
             loop,
-        }: Spritesheet3DParameters
+        }: Spritesheet3DParameters,
     ) {
         const [spritesheet_w, spritesheet_h] = [sprite_atlas_json[textures].w, sprite_atlas_json[textures].h];
 
@@ -621,7 +624,7 @@ export class Spritesheet3D extends THREE.Mesh<THREE.PlaneGeometry, Sprite3DMater
                     sprite_atlas_json[textures].x + frame_w * c,
                     sprite_atlas_json[textures].y + frame_h * r,
                     frame_w,
-                    frame_h
+                    frame_h,
                 );
 
                 frame_textures.push(frame);
@@ -696,7 +699,7 @@ export class StaticSpritesheet3D extends THREE.Mesh<THREE.PlaneGeometry, Sprite3
             rows,
             columns,
             color = 0xffffff,
-        }: StaticSpritesheet3DParameters
+        }: StaticSpritesheet3DParameters,
     ) {
         const [spritesheet_w, spritesheet_h] = [sprite_atlas_json[textures].w, sprite_atlas_json[textures].h];
 
@@ -716,7 +719,7 @@ export class StaticSpritesheet3D extends THREE.Mesh<THREE.PlaneGeometry, Sprite3
                     sprite_atlas_json[textures].x + frame_w * c,
                     sprite_atlas_json[textures].y + frame_h * r,
                     frame_w,
-                    frame_h
+                    frame_h,
                 );
 
                 frame_textures.push(frame);
@@ -730,7 +733,7 @@ export class StaticSpritesheet3D extends THREE.Mesh<THREE.PlaneGeometry, Sprite3
                     new THREE.MeshStandardMaterial({
                         map: frame_textures[initial_frame],
                         color,
-                    })
+                    }),
                 );
                 break;
             case Sprite3DMaterialKind.Basic:
@@ -740,7 +743,7 @@ export class StaticSpritesheet3D extends THREE.Mesh<THREE.PlaneGeometry, Sprite3
                     new THREE.MeshBasicMaterial({
                         map: frame_textures[initial_frame],
                         color,
-                    })
+                    }),
                 );
                 break;
         }
@@ -783,7 +786,7 @@ export class Sprite2D extends THREE.Sprite {
             render_order = 0,
             depth_test = true,
             proportional_scale = undefined,
-        }: Sprite2DParameters
+        }: Sprite2DParameters,
     ) {
         super(new THREE.SpriteMaterial({ map, depthTest: depth_test }));
 
@@ -818,6 +821,240 @@ export class Sprite2D extends THREE.Sprite {
 
     position_y_towards(target: number, speed: number): boolean {
         return animate_object_position_y(this, target, speed);
+    }
+}
+
+type Fullscreen3DParameters = {
+    position_z?: number;
+    opacity?: number;
+    render_order?: number;
+    depth_test?: boolean;
+    visible?: boolean;
+    color?: THREE.ColorRepresentation;
+    side?: THREE.Side;
+};
+
+export class Fullscreen3D extends THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> {
+    position_z: number;
+
+    constructor(
+        texture: THREE.Texture,
+        {
+            position_z = -1,
+            opacity = 1,
+            render_order = 0,
+            depth_test = true,
+            visible = true,
+            side = THREE.FrontSide,
+            color = 0xffffff,
+        }: Fullscreen3DParameters,
+    ) {
+        super(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+        this.material.map = texture;
+        this.position_z = position_z;
+        this.material.opacity = opacity;
+        this.renderOrder = render_order;
+        this.material.depthTest = depth_test;
+        this.visible = visible;
+        this.material.side = side;
+        this.material.color = new THREE.Color(color);
+    }
+
+    update(camera: THREE.PerspectiveCamera): void {
+        const height = 2 * Math.tan(((camera.fov / 2) * Math.PI) / 180) * Math.abs(this.position_z);
+        const width = height * camera.aspect;
+        this.scale.set(width, height, 1);
+
+        const offset = new THREE.Vector3(0, 0, this.position_z);
+        offset.applyQuaternion(camera.quaternion);
+        this.position.copy(camera.position).add(offset);
+        this.quaternion.copy(camera.quaternion);
+    }
+}
+
+type FullscreenMediaVideo3DParameters = Fullscreen3DParameters;
+
+export class FullscreenMediaVideo3D extends Fullscreen3D {
+    video: Video;
+    should_refresh: boolean;
+    canvas: OffscreenCanvas;
+    canvas_texture: THREE.CanvasTexture;
+    canvas_ctx: OffscreenCanvasRenderingContext2D;
+    constructor(video: Video, params: FullscreenMediaVideo3DParameters) {
+        const canvas = new OffscreenCanvas(320, 240);
+        const canvas_texture = new THREE.CanvasTexture(canvas);
+        super(canvas_texture, params);
+        this.video = video;
+        this.should_refresh = false;
+        this.canvas = canvas;
+        this.canvas_texture = canvas_texture;
+        this.canvas_texture.minFilter = THREE.LinearFilter;
+        this.canvas_texture.magFilter = THREE.LinearFilter;
+        this.canvas_ctx = this.canvas.getContext("2d");
+
+        const enable_rerender_cb = () => (this.should_refresh = true);
+        const disable_rerender_cb = () => (this.should_refresh = false);
+        for (const event of ["loadedmetadata", "canplay", "play"]) {
+            this.video.addEventListener(event, enable_rerender_cb);
+        }
+        for (const event of ["pause", "ended"]) {
+            this.video.addEventListener(event, disable_rerender_cb);
+        }
+    }
+    update(camera: THREE.PerspectiveCamera): void {
+        if (!this.should_refresh) {
+            return;
+        }
+        super.update(camera);
+        this.canvas_ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+        this.canvas_texture.needsUpdate = true;
+    }
+}
+
+type FullscreenMediaSubtitles3DParameters = {
+    position_z?: number;
+    opacity?: number;
+    visible?: boolean;
+    color?: THREE.ColorRepresentation;
+    side?: THREE.Side;
+};
+
+export class FullscreenMediaSubtitles3D extends Fullscreen3D {
+    video: Video;
+    media_audio: MediaAudio;
+    active_cues: Set<Cue>;
+    cues_by_start: Cue[];
+    cues_by_end: Cue[];
+    should_refresh: boolean;
+    si: number;
+    ei: number;
+    last_time: number;
+    canvas: OffscreenCanvas;
+    canvas_texture: THREE.CanvasTexture;
+    canvas_ctx: OffscreenCanvasRenderingContext2D;
+    font_px: number;
+    line_height_px: number;
+    background_padding_x_px: number;
+    max_width_px: number;
+    split: uWrap.Split;
+    
+
+    constructor(video: Video, media_audio: MediaAudio, params: FullscreenMediaSubtitles3DParameters) {
+        const canvas = new OffscreenCanvas(640, 480);
+        const canvas_texture = new THREE.CanvasTexture(canvas);
+        super(canvas_texture, {
+            depth_test: false,
+            render_order: Number.MAX_SAFE_INTEGER,
+            ...params,
+        });
+        this.video = video;
+        this.media_audio = media_audio;
+        this.should_refresh = false;
+        this.active_cues = new Set();
+        this.cues_by_start = [];
+        this.cues_by_end = [];
+        this.si = 0;
+        this.ei = 0;
+        this.last_time = 0;
+        this.canvas = canvas;
+        this.canvas_texture = canvas_texture;
+        this.canvas_texture.minFilter = THREE.LinearFilter;
+        this.canvas_texture.magFilter = THREE.LinearFilter;
+        this.canvas_ctx = this.canvas.getContext("2d");
+
+        this.font_px = 22;
+        this.line_height_px = 1.2 * this.font_px;
+        this.background_padding_x_px = (this.line_height_px - this.font_px) / 2;
+        this.max_width_px = this.canvas.width - 50;
+        this.canvas_ctx.font = `${this.font_px}px system-ui`;
+        this.canvas_ctx.textAlign = "center";
+        (this.canvas_ctx as any).letterSpacing = "0px";
+        this.split = uWrap.varPreLine(this.canvas_ctx as unknown as CanvasRenderingContext2D).split;
+
+        this.material.transparent = true;
+
+        const enable_rerender_cb = () => (this.should_refresh = true);
+        const disable_rerender_cb = () => (this.should_refresh = false);
+        for (const event of ["loadedmetadata", "canplay", "play"]) {
+            this.video.addEventListener(event, enable_rerender_cb);
+        }
+        for (const event of ["pause", "ended"]) {
+            this.video.addEventListener(event, disable_rerender_cb);
+        }
+    }
+
+    get_media(): Video | MediaAudio {
+        return this.video.src === "" ? this.media_audio : this.video;
+    }
+
+    set_cues(new_cues: Cue[]): void {
+        this.cues_by_start = [...new_cues].sort((a, b) => a.start - b.start);
+        this.cues_by_end = [...new_cues].sort((a, b) => a.end - b.end);
+        this.active_cues.clear();
+        this.should_refresh = true;
+        this.si = 0;
+        this.ei = 0;
+        this.last_time = 0;
+    }
+
+    update(camera: THREE.PerspectiveCamera): void {
+        // cue handling first
+        let active_cues_updated = false;
+        const current_time = this.get_media().currentTime * 1000;
+        if (current_time >= this.last_time) {
+            while (this.si < this.cues_by_start.length && this.cues_by_start[this.si].start <= current_time) {
+                this.active_cues.add(this.cues_by_start[this.si++]);
+                active_cues_updated = true;
+            }
+            while (this.ei < this.cues_by_end.length && this.cues_by_end[this.ei].end < current_time) {
+                this.active_cues.delete(this.cues_by_end[this.ei++]);
+                active_cues_updated = true;
+            }
+        } else {
+            this.active_cues.clear();
+            this.cues_by_start.forEach((cue) => {
+                if (cue.start <= current_time && cue.end >= current_time) this.active_cues.add(cue);
+            });
+            // Reset sweep pointers to match current state
+            this.si = this.cues_by_start.findIndex((s) => s.start > current_time);
+            if (this.si === -1) this.si = this.cues_by_start.length;
+            this.ei = this.cues_by_end.findIndex((e) => e.end >= current_time);
+            if (this.ei === -1) this.ei = this.cues_by_end.length;
+            active_cues_updated = true;
+        }
+        this.last_time = current_time;
+        this.should_refresh = this.should_refresh || active_cues_updated;
+        // then rendering
+        if (!this.should_refresh) {
+            return;
+        }
+        super.update(camera);
+        this.canvas_ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        for (const cue of this.active_cues) {
+            const lines = this.split(cue.text, this.max_width_px)
+                .reverse()
+                .map((text, index) => ({
+                    text,
+                    x: this.canvas.width / 2,
+                    y: this.canvas.height - (index + 1) * this.line_height_px,
+                    width: this.canvas_ctx.measureText(text).width,
+                }));
+            this.canvas_ctx.fillStyle = "black";
+            for (const line of lines) {
+                this.canvas_ctx.fillRect(
+                    line.x - line.width / 2 - this.background_padding_x_px,
+                    line.y - this.font_px,
+                    line.width + this.background_padding_x_px * 2,
+                    this.line_height_px,
+                );
+            }
+            this.canvas_ctx.fillStyle = "white";
+            for (const line of lines) {
+                this.canvas_ctx.fillText(line.text, line.x, line.y);
+            }
+        }
+        this.canvas_texture.needsUpdate = true;
+        this.should_refresh = false;
     }
 }
 
@@ -934,7 +1171,7 @@ export class GLBModel extends Group {
     constructor(
         kind: ModelKind,
         material: THREE.Material,
-        { position = vec3(0, 0, 0), scale = vec3(1, 1, 1), rotation = euler(0, 0, 0) }: GLBModelParameters
+        { position = vec3(0, 0, 0), scale = vec3(1, 1, 1), rotation = euler(0, 0, 0) }: GLBModelParameters,
     ) {
         if (!all_gltfs_loaded()) {
             throw new Error("not all models have been loaded");
@@ -1053,7 +1290,7 @@ export type MeshParameters = {
 
 export class Mesh<
     G extends THREE.BufferGeometry = THREE.BufferGeometry,
-    M extends THREE.Material = THREE.Material
+    M extends THREE.Material = THREE.Material,
 > extends THREE.Mesh<G, M> {
     animation_controller: AnimationController;
 
@@ -1066,7 +1303,7 @@ export class Mesh<
             scale = vec3(1, 1, 1),
             render_order = 0,
             visible = true,
-        }: MeshParameters
+        }: MeshParameters,
     ) {
         super(geometry, material);
 
@@ -1123,7 +1360,7 @@ export class Mesh<
         this: Mesh<G, THREE.ShaderMaterial>,
         key: string,
         target: number,
-        speed: number
+        speed: number,
     ): boolean {
         return animate_object_uniform_number(this, key, target, speed);
     }
@@ -1180,7 +1417,7 @@ export class Mesh<
 
 function set_plane_object_scale_proportionally<
     T extends THREE.PlaneGeometry,
-    M extends THREE.MeshBasicMaterial | THREE.MeshStandardMaterial
+    M extends THREE.MeshBasicMaterial | THREE.MeshStandardMaterial,
 >(mesh: THREE.Mesh<T, M> | THREE.Sprite, scale_factor: number): void {
     const texture = mesh.material.map;
     if (!texture) {
@@ -1337,7 +1574,7 @@ function animate_group_opacity(group: Group, target: number, speed: number): boo
 function set_object_uniform<T, M extends THREE.BufferGeometry<THREE.NormalBufferAttributes>>(
     mesh: THREE.Mesh<M, THREE.ShaderMaterial>,
     key: string,
-    value: T
+    value: T,
 ): void {
     mesh.material.uniforms[key] = { value };
 }
@@ -1346,7 +1583,7 @@ function animate_object_uniform_number<G extends THREE.BufferGeometry>(
     mesh: THREE.Mesh<G, THREE.ShaderMaterial>,
     key: string,
     target: number,
-    speed: number
+    speed: number,
 ): boolean {
     const new_value = animate_number_towards(mesh.material.uniforms[key].value, target, speed);
 
@@ -1375,7 +1612,7 @@ export function animate_light_intensity(light: THREE.Light, target: number, spee
 export function is_plane_in_sight(
     plane_object: THREE.Object3D,
     camera: THREE.Camera,
-    threshold: number = 0.01
+    threshold: number = 0.01,
 ): boolean {
     const plane_normal = new THREE.Vector3(0, 0, 1);
     plane_normal.transformDirection(plane_object.matrixWorld).normalize();

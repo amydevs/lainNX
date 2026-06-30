@@ -1,25 +1,35 @@
 import * as THREE from "three";
 import { type Node, parseSync as parseVttSync } from "subtitle";
-import {
-    get_video,
-    get_video_mesh as _get_video_mesh,
-    get_media_audio,
-    update_active_cues,
-    set_cues,
-    update_subtitles_mesh,
-} from "./media_singletons";
 import { get_user_language } from "./engine";
-import { update_video_mesh } from "./media_singletons";
 import { MediaAudio } from "./media_audio";
+import { FullscreenMediaSubtitles3D, FullscreenMediaVideo3D } from "./objects";
 
-export function get_video_mesh(): THREE.Mesh {
-    return _get_video_mesh();
+const VIDEO = new Video();
+const FULLSCREEN_MEDIA_VIDEO = new FullscreenMediaVideo3D(VIDEO, {
+    position_z: -20
+});
+export function get_video(): Video {
+    return VIDEO;
+}
+export function get_fullscreen_media_video(): FullscreenMediaVideo3D {
+    return FULLSCREEN_MEDIA_VIDEO;
 }
 
+const MEDIA_AUDIO = new MediaAudio();
+export function get_media_audio(): MediaAudio {
+    return MEDIA_AUDIO;
+}
+
+const FULLSCREEN_MEDIA_SUBTITLES = new FullscreenMediaSubtitles3D(VIDEO, MEDIA_AUDIO, {});
+export function get_fullscreen_media_subtitles(): FullscreenMediaSubtitles3D {
+    return FULLSCREEN_MEDIA_SUBTITLES;
+}
+
+// ============================ end of resources
+
 export function update_media_player(camera: THREE.PerspectiveCamera) {
-    update_active_cues();
-    update_subtitles_mesh(camera);
-    update_video_mesh(camera);
+    FULLSCREEN_MEDIA_SUBTITLES.update(camera);
+    FULLSCREEN_MEDIA_VIDEO.update(camera);
 }
 
 export function get_audio_media_file_path(media_file: string): string {
@@ -154,7 +164,7 @@ export class MediaPlayer {
         // this.track_el.kind = "subtitles";
         // this.track_el.default = true;
 
-        set_cues([]);
+        FULLSCREEN_MEDIA_SUBTITLES.set_cues([]);
         this.subtitles_fetch_abort_controller?.abort();
         if (track_src) {
             this.subtitles_fetch_abort_controller = new AbortController();
@@ -162,7 +172,7 @@ export class MediaPlayer {
                 .then((response) => response.text())
                 .then((vtt_text) => {
                     const nodes: Node[] = parseVttSync(vtt_text);
-                    set_cues(nodes.filter((e) => e.type === "cue").map((e) => e.data));
+                    FULLSCREEN_MEDIA_SUBTITLES.set_cues(nodes.filter((e) => e.type === "cue").map((e) => e.data));
                 })
                 .catch(() => {});
         }
