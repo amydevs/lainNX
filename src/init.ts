@@ -62,7 +62,7 @@ export async function init() {
         console.log("disabled sleep whilst extracting files");
         console.log("docking is recommended whilst this happens, ESPECIALLY IF YOU HAVE AN OLED SWITCH IN CASE OF BURN-IN");
         console.log("if you need to dock your switch,\nplease restart LainNX after doing so as a bug will cause the extraction to fail if you dock mid-extraction");
-        let compressed_files = Switch.file(compressed_files_path);
+        let compressed_files = Switch.file(compressed_files_path, { bigFile: true })
         const compressed_files_stream = compressed_files.stream();
         const reader = new zip.ZipReader(compressed_files.stream(), {
             useCompressionStream: true,
