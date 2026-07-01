@@ -49,13 +49,7 @@ async function extract(compressed_files_path: string) {
         await new_file.writable.close().catch(() => {});
     }
     await compressed_files_stream.cancel().catch(() => {});
-    const new_compressed_files_path = `${compressed_files_path}.old`;
     console.debug(`finished extraction at ${new Date().toISOString()}`);
-    console.log(
-        `extracted all files, renaming compressed files from ${compressed_files_path} to ${new_compressed_files_path}...`,
-    );
-    await Switch.rename(compressed_files_path, new_compressed_files_path);
-    console.log(`rename complete, you may delete ${new_compressed_files_path} if you wish to free up space`);
 }
 
 export async function init() {
@@ -152,6 +146,12 @@ export async function init() {
             Switch.setMediaPlaybackState(false);
             console.log(`reenabled sleep after extracting files`);
         }
+        const new_found_assets_path = `${found_assets_path}.old`;
+        console.log(
+            `asset extraction complete, renaming compressed files from ${found_assets_path} to ${new_found_assets_path}...`,
+        );
+        await Switch.rename(found_assets_path, new_found_assets_path);
+        console.log(`rename complete, you may delete ${new_found_assets_path} if you wish to free up space`);
     }
 
     console.log(`renaming potentially misnamed files in ${__ROOT_PATH__}/assets...`);
