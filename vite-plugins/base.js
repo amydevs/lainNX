@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import package_json from "../package.json";
 import syllable_map from "../src/static/json/voice.json";
 
 const REVERSE_TRANSLATION_TABLE = Object.fromEntries(
@@ -11,8 +12,7 @@ const REVERSE_TRANSLATION_TABLE = Object.fromEntries(
 const base = ({ base }) => {
     const tempBase = "/DO_NOT_USE_BASE_PATH";
     const isExternalAssets = base.startsWith("sdmc:")
-    const outDir = !isExternalAssets ? "romfs" : base.split("/").at(-1);
-    console.log(`temp outDir set to ${outDir}`);
+    const outDir = !isExternalAssets ? "romfs" : package_json.name;
     return {
         name: 'base-plugin',
         config() {
