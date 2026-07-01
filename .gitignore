@@ -15,8 +15,8 @@ scripts/dev/*
 !scripts/*.cjs
 !scripts/*.ksy
 !scripts/*.json
-src/static/json/sprite_atlas.json
-src/textures.ts
+# src/static/json/sprite_atlas.json
+# src/textures.ts
 /dist
 /romfs
 /LainNX

@@ -12,6 +12,7 @@ const base = ({ base }) => {
     const tempBase = "/DO_NOT_USE_BASE_PATH";
     const isExternalAssets = base.startsWith("sdmc:")
     const outDir = !isExternalAssets ? "romfs" : base.split("/").at(-1);
+    console.log(`temp outDir set to ${outDir}`);
     return {
         name: 'base-plugin',
         config() {
