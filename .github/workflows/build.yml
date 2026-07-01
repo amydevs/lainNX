@@ -58,6 +58,12 @@ jobs:
       - run: npm run nro
       - name: Create bundle
         run: |
+          if [[ "$ROOT_PATH" == sdmc:* ]]; then
+            base_bundle_path="./bundle/${ROOT_PATH:5}"
+            mkdir -p $base_bundle_path
+            touch "${base_bundle_path}/EXTRACT FOLDERS FROM laingame.com TO HERE.txt"
+            touch "${base_bundle_path}/OR PLACE laingame.com HERE.txt"
+          fi
           package_name=$(cat package.json | jq -r '.name')
           mkdir -p "./bundle/switch/${package_name}"
           cp "${package_name}.nro" "./bundle/switch/${package_name}"
