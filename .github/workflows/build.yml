@@ -1,0 +1,73 @@
+# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
+# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  ROOT_PATH: "sdmc:/switch/LainNX"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "npm"
+      - name: Cache voice files
+        uses: actions/cache@v6
+        with:
+          path: public/voice
+          key: ${{ runner.os }}-voice
+      - run: npm ci
+      - name: Create dummy assets
+        run: |
+          mkdir -p ./src/static/sprites/lain
+          touch ./src/static/sprites/game.png
+          i=0
+          while [ $i -le 25 ]
+          do
+              touch "./src/static/sprites/lain/lain_frames_$i.png"
+              i=$((i + 1))
+          done
+          i=0
+          while [ $i -le 2 ]
+          do
+              touch "./src/static/sprites/lain/lain_talk_frames_$i.png"
+              i=$((i + 1))
+          done
+      - name: Get voice files
+        run: |
+          if [ ! -d "./public/voice" ]; then
+            mkdir ./public/voice
+            wget -q --show-progress \
+                -U "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" \
+                -O "./files.zip" \
+                "$COMPRESSED_ASSETS_URL"
+            unzip -j files.zip "voice/*" -d ./public/voice
+          fi
+        env:
+          COMPRESSED_ASSETS_URL: ${{ secrets.COMPRESSED_ASSETS_URL }}
+      - run: npm run build
+      - run: npm run nro
+      - name: Create bundle
+        run: |
+          if [[ "$ROOT_PATH" == sdmc:* ]]; then
+            base_bundle_path="./bundle/${ROOT_PATH:5}"
+            mkdir -p $base_bundle_path
+            touch "${base_bundle_path}/EXTRACT FOLDERS FROM laingame.com TO HERE.txt"
+            touch "${base_bundle_path}/OR PLACE laingame.com HERE.txt"
+          fi
+          package_name=$(cat package.json | jq -r '.name')
+          mkdir -p "./bundle/switch/${package_name}"
+          cp "${package_name}.nro" "./bundle/switch/${package_name}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ github.event.repository.name }}_nro.zip
+          path: ./bundle/
