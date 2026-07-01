@@ -1,5 +1,12 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import syllable_map from "../src/static/json/voice.json";
+
+const REVERSE_TRANSLATION_TABLE = Object.fromEntries(
+    Object
+        .entries(syllable_map.translation_table)
+        .map(([k, v]) => [v, k])
+)
 
 const base = ({ base }) => {
     const tempBase = "/DO_NOT_USE_BASE_PATH";
@@ -7,7 +14,7 @@ const base = ({ base }) => {
     const outDir = !isExternalAssets ? "romfs" : base.split("/").at(-1);
     return {
         name: 'base-plugin',
-        config(config) {
+        config() {
             return {
                 base: tempBase,
                 build: {
@@ -37,6 +44,24 @@ const base = ({ base }) => {
                         fs.rmSync(path.join(outDir, file))
                     }
                 }
+            }
+            const romfsVoiceDir = path.join("romfs", "voice");
+            if (fs.existsSync(romfsVoiceDir)) {
+                fs.rmSync(romfsVoiceDir, { recursive: true, force: true });
+            }
+            fs.mkdirSync(romfsVoiceDir);
+            for (const filename of fs.readdirSync(path.join(outDir, "voice"))) {
+                const matches = filename.match(/(.*)(\.(\w|\d)*)$/);
+                let newFileName = matches[1]
+                    .replace(/\.(\w|\d)*$/, "")
+                    .split("_")
+                    .map((filenameChunk) => REVERSE_TRANSLATION_TABLE[filenameChunk] ?? filenameChunk)
+                    .join("_") + matches[2];
+
+                fs.renameSync(
+                    path.join(outDir, "voice", filename),
+                    path.join(romfsVoiceDir, newFileName)
+                );
             }
         }
     }

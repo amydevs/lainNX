@@ -82,9 +82,10 @@ function get_syllable_filenames(player_name: string): string[] {
         // convert filename to katakana
         filenames.push(
             filename
-                .split("_")
-                .map((c) => translation_table[c as keyof typeof translation_table])
-                .join("_"),
+                // TODO: switch filesystem doesnt like utf-8 encoded filenames, so use syllables for now
+                // .split("_")
+                // .map((c) => translation_table[c as keyof typeof translation_table])
+                // .join("_"),
         );
     }
 

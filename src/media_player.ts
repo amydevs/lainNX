@@ -39,7 +39,7 @@ export function get_track_path(node_name: string): string {
 }
 
 export function get_voice_syllable_path(syllable: string): string {
-    return `${__ROOT_PATH__}/voice/${syllable}.mp4`;
+    return `romfs:/voice/${syllable}.mp4`;
 }
 
 export class MediaPlayer {
