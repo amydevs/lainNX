@@ -44,8 +44,15 @@ export async function init() {
     }
     Switch.Profile.current = profile;
 
-    const compressed_files_path = `${__ROOT_PATH__}/laingame.com`;
-    if ((await Switch.statSync(compressed_files_path)) != null) {
+    let compressed_files_path: string | null = null;
+    for (const filename of ["laingame.com", "laingame.zip", "laingame"]) {
+        const path = `${__ROOT_PATH__}/${filename}`;
+        if (await Switch.stat(path) != null) {
+            compressed_files_path = path;
+            break;
+        }
+    }
+    if (compressed_files_path != null) {
         console.log(
             `found compressed files at ${compressed_files_path}, extracting (this might take a while)...`,
         );
