@@ -1,5 +1,5 @@
 import * as zip from "@zip.js/zip.js";
-// nx setup stuff
+
 export async function init() {
     console.log("initializing...");
 
@@ -49,12 +49,12 @@ export async function init() {
         console.log(
             `found compressed files at ${compressed_files_path}, extracting (this might take a while)...`,
         );
-        console.log(`if you find this process too slow, you may also extract the files in "laingame.com" manually to ${__ROOT_PATH__}`)
+        console.log(`if you find this process too slow,\nyou may also extract the files in "laingame.com" manually to ${__ROOT_PATH__}`)
         console.debug(`started extraction at ${new Date().toISOString()}`);
         Switch.setMediaPlaybackState(true);
         console.log("disabled sleep whilst extracting files");
         console.log("docking is recommended whilst this happens, ESPECIALLY IF YOU HAVE AN OLED SWITCH IN CASE OF BURN-IN");
-        console.log("if you need to dock your switch, please restart LainNX after doing so as a bug will cause the extraction to fail if you dock mid-extraction");
+        console.log("if you need to dock your switch,\nplease restart LainNX after doing so as a bug will cause the extraction to fail if you dock mid-extraction");
         let compressed_files = Switch.file(compressed_files_path);
         const compressed_files_stream = compressed_files.stream();
         const reader = new zip.ZipReader(compressed_files.stream(), {
@@ -64,7 +64,7 @@ export async function init() {
         const entries_stream = reader.getEntriesGenerator({
             onprogress: (_p, t) => { total = t },
         });
-        const file_name_filter_regex = /^(assets|emote-wheel|images|json|media|media-background-images|sfx|voice|webvtt)/;
+        const file_name_filter_regex = /^(assets|emote-wheel|images|json|media|media-background-images|sfx|webvtt)/;
         let i = 0;
         for await (const entry of entries_stream) {
             i++;
