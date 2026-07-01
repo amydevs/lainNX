@@ -2,6 +2,15 @@
 
 A `nx.js` implementation of the Serial Experiments Lain PSX game using `three.js` with the aim to provide multi-language support and make it more accessible.
 
+## Installation
+
+Since the homebrew app does not bundle any game assets itself, you will need to provide the `laingame.com` file yourself. This guide will not mention whatsoever how to obtain this file for legal reasons.
+
+1. Download the latest `lainNX_nro.zip` from [here](https://nightly.link/amydevs/lainNX/workflows/build/master/lainNX_nro.zip)
+2. Extract `lainNX_nro.zip` to the root of your switch SD card
+3. Rename `laingame.com` to `laingame.zip` and extract all folders inside said zip to the `switch/LainNX` folder on your switch SD card
+4. Launch `LainNX` from the Homebrew launcher (make sure you're not in applet mode!)
+
 ## History
 
 The original PSX game was released in Japan, back in 1998. The game never got a proper english adaptation, which resulted in all non-Japanese speaking players either having to play through the game while simultaneously reading through the translation, or simply not playing the game at all and only reading it.
