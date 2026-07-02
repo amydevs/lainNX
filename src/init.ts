@@ -125,6 +125,8 @@ export async function init() {
     // config file creation
     if ((await Switch.stat(CONFIG_FILE_PATH)) == null) {
         console.log(`config file not found at ${CONFIG_FILE_PATH}, creating...`);
+        localStorage!.removeItem(LANG_KEY);
+        localStorage!.removeItem(KEYBINDINGS_KEY);
         const config = {
             COMMENT_RESERVE_KEY: "",
             [LANG_KEY]: get_user_language().code,
