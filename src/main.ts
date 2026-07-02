@@ -4,6 +4,7 @@ import { init } from "./init";
 
 (async () => {
     await init();
+    console.log("loading engine...");
     check_if_legacy_save_and_upgrade();
 
     let is_page_visible = true;

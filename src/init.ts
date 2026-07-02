@@ -238,4 +238,6 @@ export async function init() {
     window.addEventListener("beforeunload", (event) => {
         event.preventDefault();
     });
+
+    console.log("finished initializing");
 }
