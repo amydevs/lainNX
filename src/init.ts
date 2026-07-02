@@ -1,9 +1,18 @@
-import * as zip from "@zip.js/zip.js";
-import { get_user_language, Key, KEYBINDINGS_KEY, LANG_KEY, read_key_mappings } from "./engine";
+import JSONC from "tiny-jsonc";
+import { ZipReader } from "@zip.js/zip.js";
+import {
+    get_user_language,
+    Key,
+    KEYBINDINGS_KEY,
+    LANG_KEY,
+    read_key_mappings,
+    SUPPORTED_LANGUAGES,
+} from "./engine";
 import { Button } from "@nx.js/constants";
 
 const CONFIG_FILE_PATH = `${__ROOT_PATH__}/config.json`;
-const ASSET_FILE_NAME_FILTER_REGEX = /^(assets|emote-wheel|images|json|media|media-background-images|sfx|webvtt)/;
+const ASSET_FILE_NAME_FILTER_REGEX =
+    /^(assets|emote-wheel|images|json|media|media-background-images|sfx|webvtt)/;
 
 async function is_directory(path: string): Promise<boolean> {
     const stat = await Switch.stat(path);
@@ -17,7 +26,7 @@ async function is_directory(path: string): Promise<boolean> {
 async function extract(compressed_files_path: string): Promise<void> {
     const compressed_files = Switch.file(compressed_files_path, { bigFile: true });
     const compressed_files_stream = compressed_files.stream();
-    const reader = new zip.ZipReader(compressed_files.stream(), {
+    const reader = new ZipReader(compressed_files.stream(), {
         useCompressionStream: true,
         useWebWorkers: false,
     });
@@ -117,18 +126,31 @@ export async function init() {
     if ((await Switch.stat(CONFIG_FILE_PATH)) == null) {
         console.log(`config file not found at ${CONFIG_FILE_PATH}, creating...`);
         const config = {
+            COMMENT_RESERVE_KEY: "",
             [LANG_KEY]: get_user_language().code,
             [KEYBINDINGS_KEY]: to_readable_key_mappings(read_key_mappings()),
         };
-        await Switch.writeFile(CONFIG_FILE_PATH, JSON.stringify(config, null, 4));
+        const config_json = JSON.stringify(config, null, 4);
+        const config_jsonc = config_json.replace(
+            /"COMMENT_RESERVE_KEY":.*/,
+            `// supported languages: ${SUPPORTED_LANGUAGES.map((lang) => lang.code).join(", ")}`,
+        );
+        await Switch.writeFile(CONFIG_FILE_PATH, config_jsonc);
     } else {
         try {
             console.log(`config file found at ${CONFIG_FILE_PATH}, loading...`);
-            const config_file = JSON.parse(await Switch.file(CONFIG_FILE_PATH).text());
-            localStorage!.setItem(LANG_KEY, config_file[LANG_KEY]);
+            const config_file = JSONC.parse(await Switch.file(CONFIG_FILE_PATH).text());
+            if (config_file == null) {
+                throw new Error("could not parse config file");
+            }
+            localStorage!.setItem(LANG_KEY, config_file[LANG_KEY as unknown as keyof typeof config_file]);
             localStorage!.setItem(
                 KEYBINDINGS_KEY,
-                JSON.stringify(from_readable_key_mappings(config_file[KEYBINDINGS_KEY])),
+                JSON.stringify(
+                    from_readable_key_mappings(
+                        config_file[KEYBINDINGS_KEY as unknown as keyof typeof config_file],
+                    ),
+                ),
             );
         } catch (_e) {
             console.error(`failed to load config file at ${CONFIG_FILE_PATH}, returning to defaults...`);
