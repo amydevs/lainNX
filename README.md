@@ -4,13 +4,13 @@
   <img src="screenshots/nx.png" width="49%">
 </p>
 
-A `nx.js`-based implementation of the Serial Experiments Lain PSX game using `three.js` with the aim to provide multi-language support and make it more accessible.
+A `nx.js`-based implementation of the Serial Experiments Lain PSX game using `three.js` with the aim to provide multi-language support and run on Switch as a homebrew app.
 
 ## Installation
 
 Since the homebrew app does not bundle any game assets itself, you will need to provide a "offline `laingame.com`" file yourself. The `laingame.com` file is an offline/downloadable version of the lainTSX web-browser port of the game and is NOT the same as the original `.bin` PS1 ROM files. This guide will not mention whatsoever how to obtain this file for legal reasons.
 
-1. Download the latest `lainNX_nro.zip` from [here](https://nightly.link/amydevs/lainNX/workflows/build/master/lainNX_nro.zip)
+1. Download the latest `lainNX_nro.zip` from [here](https://github.com/amydevs/lainNX/releases/latest/download/lainNX_nro.zip)
 2. Extract `lainNX_nro.zip` to the root of your switch SD card.
 3.
     - Rename `laingame.com` to `laingame.zip` and extract all folders EXCEPT `voice` inside said zip to the `switch/LainNX` folder on your Switch SD card. Refer to this [gif](screenshots/extraction.gif) for how to extract said files on Windows.
@@ -68,9 +68,10 @@ Note that currently the extraction script doesn't extract SFX, but the game stil
 
 ## Reporting bugs and contributing
 
-If you have any ideas/suggestions/found an issue or want to help us with the translation or anything else, please [make an issue](https://github.com/ad044/lainTSX/issues).
+If you have any ideas/suggestions/found an issue or want to help us with the translation or anything else, please [make an issue](https://github.com/amydevs/lainNX/issues).
 
 ## Tools used during development
 
 - [`jPSXdec`](https://github.com/m35/jpsxdec) - PlayStation 1 audio/video converter.
 - [`three.js`](https://github.com/mrdoob/three.js/) - JavaScript 3D renderer.
+- [`nx.js`](https://github.com/TooTallNate/nx.js) - JavaScript runtime for Switch Homebrew
