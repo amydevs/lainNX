@@ -61,9 +61,9 @@ const FAR = 2000;
 export const REGULAR_FOV = 55;
 export const SITE_SCENE_FOV = 35;
 
-const LANG_KEY = "lainTSX-lang";
-const SIZE_MODIFIER_KEY = "lainTSX-game-size";
-const KEYBINDINGS_KEY = "lainTSX-keys";
+export const LANG_KEY = "lainTSX-lang";
+export const SIZE_MODIFIER_KEY = "lainTSX-game-size";
+export const KEYBINDINGS_KEY = "lainTSX-keys";
 
 export type Language = {
     name: string;
@@ -276,7 +276,7 @@ function all_audio_loaded(): boolean {
 // }
 
 // TODO: remove this once audiocontext analyser is working properly
-export function get_audio_random_frequency_data(t? : number, size?: number): Uint8Array {
+export function get_audio_random_frequency_data(t?: number, size?: number): Uint8Array {
     let data_size = size ?? 1024;
     const seconds = (t ?? Date.now()) / 1000;
     const data = new Uint8Array(data_size);
@@ -321,7 +321,7 @@ export function load_texture(img: string): THREE.Texture {
 }
 
 export async function load_texture_async(img: string): Promise<THREE.Texture> {
-    const blob = await fetch(img).then((res) => res.blob()) as Blob;
+    const blob = (await fetch(img).then((res) => res.blob())) as Blob;
     const bitmap = await createImageBitmap(blob);
     const texture = new THREE.Texture(bitmap);
     return texture;
@@ -521,8 +521,8 @@ export function read_key_mappings(): Record<string, Key> {
     const stored_mappings = localStorage!.getItem(KEYBINDINGS_KEY);
     if (stored_mappings) {
         try {
-            const key_array = JSON.parse(stored_mappings);
-            return Object.fromEntries(key_array.map((key: string, index: Key) => [key, index]));
+            const key_array_or_object = JSON.parse(stored_mappings);
+            return Object.assign({}, key_array_or_object);
         } catch (err) {}
     }
 
@@ -831,7 +831,7 @@ export async function engine_create(): Promise<Engine> {
                         c * lapk_w,
                         r * lapk_h,
                         lapk_w,
-                        lapk_h
+                        lapk_h,
                     );
 
                     const location = index * frames_per_atlas + r * frames_per_row + c;

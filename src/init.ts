@@ -1,7 +1,9 @@
 import * as zip from "@zip.js/zip.js";
+import { get_user_language, Key, KEYBINDINGS_KEY, LANG_KEY, read_key_mappings } from "./engine";
+import { Button } from "@nx.js/constants";
 
-const FILE_NAME_FILTER_REGEX =
-        /^(assets|emote-wheel|images|json|media|media-background-images|sfx|webvtt)/;
+const CONFIG_FILE_PATH = `${__ROOT_PATH__}/config.json`;
+const ASSET_FILE_NAME_FILTER_REGEX = /^(assets|emote-wheel|images|json|media|media-background-images|sfx|webvtt)/;
 
 async function is_directory(path: string): Promise<boolean> {
     const stat = await Switch.stat(path);
@@ -12,7 +14,7 @@ async function is_directory(path: string): Promise<boolean> {
     return (stat.mode & S_IFDIR) === S_IFDIR;
 }
 
-async function extract(compressed_files_path: string) {
+async function extract(compressed_files_path: string): Promise<void> {
     const compressed_files = Switch.file(compressed_files_path, { bigFile: true });
     const compressed_files_stream = compressed_files.stream();
     const reader = new zip.ZipReader(compressed_files.stream(), {
@@ -28,7 +30,7 @@ async function extract(compressed_files_path: string) {
     let i = 0;
     for await (const entry of entries_stream) {
         i++;
-        if (!entry.filename.match(FILE_NAME_FILTER_REGEX)) {
+        if (!entry.filename.match(ASSET_FILE_NAME_FILTER_REGEX)) {
             continue;
         }
 
@@ -50,6 +52,21 @@ async function extract(compressed_files_path: string) {
     }
     await compressed_files_stream.cancel().catch(() => {});
     console.debug(`finished extraction at ${new Date().toISOString()}`);
+}
+
+function to_readable_key_mappings(keymap: Record<string, Key>): Record<string, string> {
+    return Object.fromEntries(
+        Object.entries(keymap).map(([action, key]) => [Button[parseInt(action.toString())], Key[key]]),
+    );
+}
+
+function from_readable_key_mappings(readable_keymap: Record<string, string>): Record<string, Key> {
+    return Object.fromEntries(
+        Object.entries(readable_keymap).map(([action, key]) => [
+            Button[action as keyof typeof Button],
+            Key[key as keyof typeof Key],
+        ]),
+    );
 }
 
 export async function init() {
@@ -96,6 +113,29 @@ export async function init() {
     }
     Switch.Profile.current = profile;
 
+    // config file creation
+    if ((await Switch.stat(CONFIG_FILE_PATH)) == null) {
+        console.log(`config file not found at ${CONFIG_FILE_PATH}, creating...`);
+        const config = {
+            [LANG_KEY]: get_user_language().code,
+            [KEYBINDINGS_KEY]: to_readable_key_mappings(read_key_mappings()),
+        };
+        await Switch.writeFile(CONFIG_FILE_PATH, JSON.stringify(config, null, 4));
+    } else {
+        try {
+            console.log(`config file found at ${CONFIG_FILE_PATH}, loading...`);
+            const config_file = JSON.parse(await Switch.file(CONFIG_FILE_PATH).text());
+            localStorage!.setItem(LANG_KEY, config_file[LANG_KEY]);
+            localStorage!.setItem(
+                KEYBINDINGS_KEY,
+                JSON.stringify(from_readable_key_mappings(config_file[KEYBINDINGS_KEY])),
+            );
+        } catch (_e) {
+            console.error(`failed to load config file at ${CONFIG_FILE_PATH}, returning to defaults...`);
+        }
+    }
+
+    // asset extraction
     let found_assets_path: string | null = null;
     for (const filename of ["laingame.com", "laingame.zip", "laingame"]) {
         const path = `${__ROOT_PATH__}/${filename}`;
@@ -112,7 +152,7 @@ export async function init() {
             Switch.setMediaPlaybackState(true);
             console.log("disabled sleep whilst extracting files");
             for await (const file of await Switch.readDir(found_assets_path)) {
-                if (!file.name.match(FILE_NAME_FILTER_REGEX)) {
+                if (!file.name.match(ASSET_FILE_NAME_FILTER_REGEX)) {
                     continue;
                 }
                 const new_file_path = `${__ROOT_PATH__}/${file.name}`;
@@ -125,8 +165,7 @@ export async function init() {
             }
             Switch.setMediaPlaybackState(false);
             console.log(`reenabled sleep after extracting files`);
-        }
-        else {
+        } else {
             console.log(
                 `found compressed assets at ${found_assets_path}, extracting (this might take a while)...`,
             );
@@ -154,6 +193,7 @@ export async function init() {
         console.log(`rename complete, you may delete ${new_found_assets_path} if you wish to free up space`);
     }
 
+    // asset renaming
     console.log(`renaming potentially misnamed files in ${__ROOT_PATH__}/assets...`);
     const file_name_asset_regex = /^(.*)-.*\.(.*)$/;
     for await (const file of await Switch.readDir(`${__ROOT_PATH__}/assets`)) {
@@ -170,6 +210,7 @@ export async function init() {
         }
     }
 
+    // allow for + button to work
     window.addEventListener("beforeunload", (event) => {
         event.preventDefault();
     });
