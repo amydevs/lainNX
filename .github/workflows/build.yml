@@ -28,18 +28,19 @@ jobs:
       - run: npm ci
       - name: Create dummy assets
         run: |
+          dummy_png_path="./screenshots/nx.png"
           mkdir -p ./src/static/sprites/lain
-          touch ./src/static/sprites/game.png
+          cp $dummy_png_path ./src/static/sprites/game.png
           i=0
           while [ $i -le 25 ]
           do
-              touch "./src/static/sprites/lain/lain_frames_$i.png"
+              cp $dummy_png_path "./src/static/sprites/lain/lain_frames_$i.png"
               i=$((i + 1))
           done
           i=0
           while [ $i -le 2 ]
           do
-              touch "./src/static/sprites/lain/lain_talk_frames_$i.png"
+              cp $dummy_png_path "./src/static/sprites/lain/lain_talk_frames_$i.png"
               i=$((i + 1))
           done
       - name: Get voice files
