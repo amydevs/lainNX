@@ -11,9 +11,13 @@ A `nx.js`-based implementation of the Serial Experiments Lain PSX game using `th
 Since the homebrew app does not bundle any game assets itself, you will need to provide the `laingame.com` file yourself. This guide will not mention whatsoever how to obtain this file for legal reasons.
 
 1. Download the latest `lainNX_nro.zip` from [here](https://nightly.link/amydevs/lainNX/workflows/build/master/lainNX_nro.zip)
-2. Extract `lainNX_nro.zip` to the root of your switch SD card
-3. Rename `laingame.com` to `laingame.zip` and extract all folders inside said zip to the `switch/LainNX` folder on your switch SD card
-4. Launch `LainNX` from the Homebrew launcher (make sure you're not in applet mode!)
+2. Extract `lainNX_nro.zip` to the root of your switch SD card.
+3.
+    - Rename `laingame.com` to `laingame.zip` and extract all folders inside said zip to the `switch/LainNX` folder on your Switch SD card. Do not worry if the `voice` folder inside fails extracting and ignore said error if it happens. Refer to this [gif](screenshots/extraction.gif) for reference.
+    - If you are on Windows make sure to do this using Windows Explorer, if you are on Mac please use Finder, otherwise if you are on linux please do this using the command `unzip laingame.zip -d laingame`. This is as 7Zip seems to have trouble with recognising the file as an archive.
+    - If you are unable to unzip the folder, you may also place `laingame.com` inside `switch/LainNX` to let the Switch unzip it on boot, make sure that you do this while docked as the extraction process takes VERY VERY LONG on Switch.
+4. Launch `LainNX` from the Homebrew launcher (make sure you're not in applet mode!).
+5. On first launch, a config file will be created at `switch/LainNX/config.json` on the Switch SD card, you may edit this to change language or keybindings as you wish.
 
 ## History
 
