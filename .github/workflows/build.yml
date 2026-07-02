@@ -6,7 +6,8 @@ name: Build
 on: push
 
 env:
-  ROOT_PATH: "sdmc:/switch/LainNX"
+  ROOT_PATH: sdmc:/switch/LainNX
+  NRO_ZIP_NAME: ${{ github.event.repository.name }}_nro.zip
 
 permissions:
   contents: write
@@ -68,12 +69,15 @@ jobs:
           package_name=$(cat package.json | jq -r '.name')
           mkdir -p "./bundle/switch/${package_name}"
           cp "${package_name}.nro" "./bundle/switch/${package_name}"
+          cd bundle
+          zip -r ../${{ env.NRO_ZIP_NAME }} .
+          cd -
       - uses: actions/upload-artifact@v7
         with:
-          name: ${{ github.event.repository.name }}_nro.zip
+          name: ${{ env.NRO_ZIP_NAME }}
           path: ./bundle/
       - name: Release
         uses: softprops/action-gh-release@v3
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
         with:
-          files: ${{ github.event.repository.name }}_nro.zip
+          files: ${{ env.NRO_ZIP_NAME }}
