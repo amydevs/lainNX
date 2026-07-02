@@ -3,13 +3,13 @@
 
 name: Build
 
-on:
-  push:
-    branches:
-      - master
+on: push
 
 env:
   ROOT_PATH: "sdmc:/switch/LainNX"
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -71,3 +71,8 @@ jobs:
         with:
           name: ${{ github.event.repository.name }}_nro.zip
           path: ./bundle/
+      - name: Release
+        uses: softprops/action-gh-release@v3
+        if: github.ref_type == 'tag'
+        with:
+          files: ${{ github.event.repository.name }}_nro.zip
