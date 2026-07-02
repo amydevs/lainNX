@@ -1,5 +1,9 @@
 ## lainTSX
 
+<p align="center">
+  <img src="screenshots/nx.png" width="49%">
+</p>
+
 A `nx.js`-based implementation of the Serial Experiments Lain PSX game using `three.js` with the aim to provide multi-language support and make it more accessible.
 
 ## Installation
