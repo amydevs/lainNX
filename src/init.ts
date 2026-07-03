@@ -219,18 +219,16 @@ export async function init() {
 
     // asset renaming
     console.log(`renaming potentially misnamed files in ${__ROOT_PATH__}/assets...`);
-    const file_name_asset_regex = /^(.*)-.*\.(.*)$/;
+    const file_name_asset_regex = /^(.*?)-.*\.(.*)$/;
     for await (const file of await Switch.readDir(`${__ROOT_PATH__}/assets`)) {
         const filename_match = file.name.match(file_name_asset_regex);
         if (filename_match != null) {
             const new_file_path = `${__ROOT_PATH__}/assets/${filename_match[1]}.${filename_match[2]}`;
-            if ((await Switch.stat(new_file_path)) == null) {
-                await Switch.rename(`${__ROOT_PATH__}/assets/${file.name}`, new_file_path);
-                console.log(`renamed ${file.name} to ${new_file_path}`);
-            } else {
-                await Switch.remove(`${__ROOT_PATH__}/assets/${file.name}`);
-                console.log(`deleted ${file.name} as ${new_file_path} already exists`);
+            if ((await Switch.stat(new_file_path)) != null) {
+                await Switch.remove(new_file_path);
             }
+            await Switch.rename(`${__ROOT_PATH__}/assets/${file.name}`, new_file_path);
+            console.log(`renamed ${file.name} to ${new_file_path}`);
         }
     }
 
