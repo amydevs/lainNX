@@ -8,7 +8,7 @@ A `nx.js`-based implementation of the Serial Experiments Lain PSX game using `th
 
 ## Installation
 
-Since the homebrew app does not bundle any game assets itself, you will need to provide a "offline `laingame.com`" file yourself. **The `laingame.com` file is an offline version of the lainTSX web-browser port of the game and is NOT the same as the original `.bin` PS1 ROM files.** This guide will not mention whatsoever how to obtain this file for legal reasons.
+Since the homebrew app does not bundle any game assets itself, you will need to provide an "offline `laingame.com`" file yourself. **The `laingame.com` file is an offline version of the lainTSX web-browser port of the game and is NOT the same as the original `.bin` PS1 ROM files.** This guide will not mention whatsoever how to obtain this file for legal reasons.
 
 1. Download the latest `lainNX_nro.zip` from [here](https://github.com/amydevs/lainNX/releases/latest/download/lainNX_nro.zip)
 2. Extract `lainNX_nro.zip` to the root of your switch SD card.
