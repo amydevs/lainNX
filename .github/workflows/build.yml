@@ -57,7 +57,7 @@ jobs:
         env:
           COMPRESSED_ASSETS_URL: ${{ secrets.COMPRESSED_ASSETS_URL }}
       - run: npm run build
-      - run: npm run nro
+      - run: npm run nro -- --fat
       - name: Create bundle
         run: |
           if [[ "$ROOT_PATH" == sdmc:* ]]; then
