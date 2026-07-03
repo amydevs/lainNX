@@ -80,4 +80,5 @@ jobs:
         uses: softprops/action-gh-release@v3
         if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
         with:
+          generate_release_notes: true
           files: ${{ env.NRO_ZIP_NAME }}
