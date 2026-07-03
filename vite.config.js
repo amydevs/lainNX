@@ -44,7 +44,7 @@ export default {
         ],
         build: {
                 target: "ES2022",
-                rollupOptions: {
+                rolldownOptions: {
                         input: {
                                 main: resolve(__dirname, 'src', "main.ts"),
                         },
