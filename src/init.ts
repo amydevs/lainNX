@@ -14,6 +14,45 @@ const CONFIG_FILE_PATH = `${__ROOT_PATH__}/config.json`;
 const ASSET_FILE_NAME_FILTER_REGEX =
     /^(assets|emote-wheel|images|json|media|media-background-images|sfx|webvtt)/;
 
+function apply_global_polyfills() {
+    const property_descriptors: Record<string, PropertyDescriptor> = {
+        "self": {
+            value: window,
+            writable: false,
+            configurable: false,
+            enumerable: true,
+        },
+        "HTMLVideoElement": {
+            value: Video,
+            writable: false,
+            configurable: false,
+            enumerable: true,
+        },
+        "HTMLAudioElement": {
+            value: Audio,
+            writable: false,
+            configurable: false,
+            enumerable: true,
+        }
+    }
+    for (const e of [globalThis, window]) {
+        Object.defineProperties(e, property_descriptors);
+    }
+    // polyfill for console methods
+    for (const k of ["log", "warn", "info", "error"] as const) {
+        const original = console[k].bind(console);
+        Object.defineProperty(console, k, {
+            value: (...args: any[]) => {
+                console.debug(...args);
+                original(...args);
+            },
+            writable: false,
+            configurable: false,
+            enumerable: true,
+        });
+    }
+}
+
 async function is_directory(path: string): Promise<boolean> {
     const stat = await Switch.stat(path);
     if (stat == null) {
@@ -81,39 +120,7 @@ function from_readable_key_mappings(readable_keymap: Record<string, string>): Re
 export async function init() {
     console.log("initializing...");
 
-    // polyfill for threejs gltfloader
-    Object.defineProperty(globalThis, "self", {
-        value: window,
-        writable: false,
-        configurable: false,
-        enumerable: true,
-    });
-    // polyfill for three.js audio and video stuff
-    Object.defineProperty(window, "HTMLVideoElement", {
-        value: Video,
-        writable: false,
-        configurable: false,
-        enumerable: true,
-    });
-    Object.defineProperty(window, "HTMLAudioElement", {
-        value: Audio,
-        writable: false,
-        configurable: false,
-        enumerable: true,
-    });
-    // polyfill for console methods
-    for (const k of ["log", "warn", "info", "error"] as const) {
-        const original = console[k].bind(console);
-        Object.defineProperty(console, k, {
-            value: (...args: any[]) => {
-                console.debug(...args);
-                original(...args);
-            },
-            writable: false,
-            configurable: false,
-            enumerable: true,
-        });
-    }
+    apply_global_polyfills();
 
     // profile selection
     let profile = Switch.Profile.current;
