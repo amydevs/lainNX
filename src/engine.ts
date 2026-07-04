@@ -302,29 +302,10 @@ export type TextureDimensions = {
 };
 
 const LOADED_TEXTURES: THREE.Texture[] = [];
+const TEXTURE_LOADER = new THREE.TextureLoader();
 
 export function load_texture(img: string): THREE.Texture {
-    const image = new Image();
-    image.src = img;
-    const texture = new THREE.Texture(image);
-    const error_cb = () => {
-        console.error(`failed to load texture "${img}"`);
-        image.removeEventListener("load", load_cb);
-    };
-    const load_cb = () => {
-        texture.needsUpdate = true;
-        image.removeEventListener("error", error_cb);
-    };
-    image.addEventListener("load", load_cb, { once: true });
-    image.addEventListener("error", error_cb, { once: true });
-    return texture;
-}
-
-export async function load_texture_async(img: string): Promise<THREE.Texture> {
-    const blob = (await fetch(img).then((res) => res.blob())) as Blob;
-    const bitmap = await createImageBitmap(blob);
-    const texture = new THREE.Texture(bitmap);
-    return texture;
+    return TEXTURE_LOADER.load(img);
 }
 
 export function get_texture(texture: Texture): THREE.Texture {
@@ -759,7 +740,7 @@ export class Engine {
 export async function engine_create(): Promise<Engine> {
     const is_debug = import.meta.env.DEV;
 
-    const atlas = await load_texture_async(sprite_atlas);
+    const atlas = await TEXTURE_LOADER.loadAsync(sprite_atlas);
     atlas.magFilter = THREE.NearestFilter;
     atlas.minFilter = THREE.NearestFilter;
 
@@ -798,7 +779,7 @@ export async function engine_create(): Promise<Engine> {
     const frames_per_atlas = frames_per_row * frames_per_col;
 
     LAPK_ATLASES_TO_LOAD.forEach(async (spritesheet, index) => {
-        load_texture_async(spritesheet).then((spritesheet_texture) => {
+        TEXTURE_LOADER.loadAsync(spritesheet).then((spritesheet_texture) => {
             for (let r = 0; r < frames_per_row; r++) {
                 for (let c = 0; c < frames_per_col; c++) {
                     const frame_texture = extract_frame(
@@ -821,7 +802,7 @@ export async function engine_create(): Promise<Engine> {
     });
 
     LAPK_TALK_ATLASES_TO_LOAD.forEach((spritesheet, index) => {
-        load_texture_async(spritesheet).then((spritesheet_texture) => {
+        TEXTURE_LOADER.loadAsync(spritesheet).then((spritesheet_texture) => {
             for (let r = 0; r < frames_per_row; r++) {
                 for (let c = 0; c < frames_per_col; c++) {
                     const frame_texture = extract_frame(
