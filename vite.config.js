@@ -13,6 +13,7 @@ const rootPath = process.env.ROOT_PATH || `sdmc:/switch/${packageJson.name}`
 // const rootPath = "romfs:";
 const assetsDirName = "assets";
 
+/** @type {import('vite').UserConfig} */
 export default {
         define: {
                 // to deal with gltf loader issues
