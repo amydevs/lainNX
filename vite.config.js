@@ -4,25 +4,23 @@ import glsl from "vite-plugin-glsl";
 import { resolve } from 'path'
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
-import base from "./vite-plugins/base";
-import nxjsConfig from "./vite-plugins/nxjs-config";
+import fsResolve from "./vite-plugins/fs-resolve";
 
 
-const rootPath = process.env.ROOT_PATH || `sdmc:/switch/${packageJson.name}`
-// uncomment this to make a self contained package
-// const rootPath = "romfs:";
+const base = process.env.ROOT_PATH || `sdmc://switch/${packageJson.name}`
 const assetsDirName = "assets";
 
 /** @type {import('vite').UserConfig} */
 export default {
+        base,
         define: {
                 // to deal with gltf loader issues
                 "location.href": "undefined",
-                "__ROOT_PATH__": `"${rootPath}"`,
+                "__ROOT_PATH__": `"${base}"`,
         },
         plugins: [
                 gltf({
-                        publicPath: `${rootPath}/${assetsDirName}`,
+                        publicPath: `${base}/${assetsDirName}`,
                 }),
                 glsl(),
                 viteStaticCopy({
@@ -40,8 +38,7 @@ export default {
                 nodePolyfills({
                         include: ["stream"],
                 }),
-                base({ base: rootPath }),
-                nxjsConfig(),
+                fsResolve(),
         ],
         build: {
                 target: "ES2022",

@@ -6,7 +6,7 @@ name: Build
 on: push
 
 env:
-  ROOT_PATH: sdmc:/switch/LainNX
+  ROOT_PATH: sdmc://switch/LainNX
   NRO_ZIP_NAME: ${{ github.event.repository.name }}_nro.zip
 
 permissions:

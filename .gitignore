@@ -18,7 +18,9 @@ scripts/dev/*
 # src/static/json/sprite_atlas.json
 # src/textures.ts
 /dist
-/romfs
+/romfs/*
+!/romfs/loading.jpg
+!/romfs/nxjs.ini
 /LainNX
 *.nro
 *.nsp
