@@ -6,6 +6,8 @@
 
 A `nx.js`-based implementation of the Serial Experiments Lain PSX game using `three.js` with the aim to provide multi-language support and run on Switch as a homebrew app.
 
+This is a fork of [lainTSX](https://github.com/ad044/lainTSX) and this project wouldn't exist without the amazing work the developers and translators that contributed on the original project. I give my thanks to all of them.
+
 ## Installation
 
 Since the homebrew app does not bundle any game assets itself, you will need to provide an "offline `laingame.com`" file yourself. **The `laingame.com` file is an offline version of the lainTSX web-browser port of the game and is NOT the same as the original `.bin` PS1 ROM files.** This guide will not mention whatsoever how to obtain this file for legal reasons.
