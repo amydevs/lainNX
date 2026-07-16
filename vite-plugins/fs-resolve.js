@@ -32,7 +32,7 @@ const fsResolve = () => {
             if (externalWorkingOutDir != null) {
                 fs.mkdirSync(outDir, { recursive: true });
                 for (const file of fs.readdirSync(externalWorkingOutDir)) {
-                    if (file.match(/^main\.js\.?/)) {
+                    if (file.match(/^.*?\.js(\..*)?$/)) {
                         fs.renameSync(path.join(externalWorkingOutDir, file), path.join(outDir, file));
                     }
                 }

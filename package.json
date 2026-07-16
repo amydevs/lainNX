@@ -13,10 +13,10 @@
         "nsp": "nxjs-nsp"
     },
     "devDependencies": {
-        "@nx.js/nro": "^1.0.0-beta.5",
-        "@nx.js/nsp": "^1.0.0-beta.5",
-        "@nx.js/runtime": "^1.0.0-beta.5",
-        "@types/node": "^26.1.0",
+        "@nx.js/nro": "^1.0.0-beta.6",
+        "@nx.js/nsp": "^1.0.0-beta.6",
+        "@nx.js/runtime": "^1.0.0-beta.6",
+        "@types/node": "^26.1.1",
         "@types/three": "^0.162.0",
         "command-exists": "^1.2.9",
         "kaitai-struct": "^0.10.0",
@@ -25,7 +25,7 @@
         "pngjs": "^7.0.0",
         "sharp": "^0.33.5",
         "typescript": "^6.0.3",
-        "vite": "^8.1.3",
+        "vite": "^8.1.5",
         "vite-plugin-glsl": "^1.6.0",
         "vite-plugin-gltf": "^4.0.0",
         "vite-plugin-node-polyfills": "^0.28.0",
@@ -34,7 +34,7 @@
     },
     "dependencies": {
         "@nx.js/constants": "^0.4.1",
-        "@zip.js/zip.js": "^2.8.26",
+        "@zip.js/zip.js": "^2.8.31",
         "subtitle": "^4.2.2",
         "three": "^0.162.0",
         "tiny-jsonc": "^1.0.2",

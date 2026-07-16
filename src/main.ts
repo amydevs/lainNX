@@ -1,11 +1,12 @@
 import { engine_create } from "./engine";
 import { check_if_legacy_save_and_upgrade } from "./save";
-import { init } from "./init";
 import { Button } from "@nx.js/constants";
 
 (async () => {
-    await init();
+    // due to nx.js 1.0.0-beta.6, init needs to happen in a separate import for whatever reason
+    await import("./init").then((e) => e.init());
     console.log("loading engine...");
+
     check_if_legacy_save_and_upgrade();
 
     let is_page_visible = true;
