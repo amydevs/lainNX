@@ -4,10 +4,11 @@ import glsl from "vite-plugin-glsl";
 import { resolve } from 'path'
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import baseRename from "./vite-plugins/base-rename";
 import fsResolve from "./vite-plugins/fs-resolve";
 
 
-const base = process.env.ROOT_PATH || `sdmc://switch/${packageJson.name}`
+const base = process.env.ROOT_PATH || `sdmc:/switch/${packageJson.name}`
 const assetsDirName = "assets";
 
 /** @type {import('vite').UserConfig} */
@@ -38,6 +39,7 @@ export default {
                 nodePolyfills({
                         include: ["stream"],
                 }),
+                baseRename(),
                 fsResolve(),
         ],
         build: {
