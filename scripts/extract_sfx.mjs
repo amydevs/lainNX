@@ -1,34 +1,45 @@
-import { mkdirSync, rmSync } from "fs";
+import { mkdirSync } from "fs";
 import { join } from "path";
 import { extract_snd_bin, load_bank, write_wav_mono } from "./psx_sound.mjs";
-import { try_spawn_process } from "./util.mjs";
 
 export const OUTPUT_SFX_FOLDER = join("..", "public", "sfx");
 
 // The game's sound effects are the 34 VAG samples inside SND.BIN's VAB sound
-// bank, played back at 22050 Hz. snd_N corresponds to VAG N+1 (the VAB's VAG
-// table is 1-based); this mapping and the sample rate were verified by
-// cross-correlating decodes against the original rip.
-//
+// bank (snd_N = VAG N+1). The game keys every SFX on at note 60, so each
+// sample's playback rate follows from its tone's center/fine tuning.
+const NOTE = 60;
+const rate_for_tone = (t) => Math.round(44100 * Math.pow(2, (NOTE + t.fine / 128 - t.center) / 12));
+const DEFAULT_RATE = rate_for_tone({ center: 66, fine: 57 });
+
+function vag_rates(vab) {
+    const rates = new Array(vab.num_vags + 1).fill(0);
+    for (const tone_zero_pass of [true, false]) {
+        for (const prog of vab.programs) {
+            if (!prog) continue;
+            prog.tones.forEach((tone, i) => {
+                if ((i === 0) !== tone_zero_pass) return;
+                if (!rates[tone.vag]) rates[tone.vag] = rate_for_tone(tone);
+            });
+        }
+    }
+    return rates.map((r) => r || DEFAULT_RATE);
+}
+
 // snd_34 (the site rotation whoosh) is not a 35th sample: the original rip is
-// snd_11's sample concatenated four times back-to-back (verified against the
-// original asset at 0.99 per-frame spectral similarity, matching unit length
-// and level - the rotation animation plays the whoosh once per site segment).
-const SFX_SAMPLE_RATE = 22050;
+// snd_11's sample concatenated four times back-to-back.
 const SND_34_SOURCE_VAG = 12; // snd_11
 const SND_34_REPEATS = 4;
 
 // VAG 28 (snd_27) is the bank's only looping sample - on the console it
-// sustains until keyed off. The original rip captured it playing through ~2.4
-// loop passes with a release fade; these constants reproduce that capture
-// (envelope correlation 0.97 against the original).
+// sustains until keyed off. These constants reproduce the original rip's
+// capture of it.
 const LOOP_TOTAL_SECONDS = 1.74;
 const LOOP_RELEASE_SECONDS = 0.9;
 const LOOP_RELEASE_DB = 20;
 
-function render_looped(vag) {
-    const total = Math.round(LOOP_TOTAL_SECONDS * SFX_SAMPLE_RATE);
-    const release = Math.round(LOOP_RELEASE_SECONDS * SFX_SAMPLE_RATE);
+function render_looped(vag, sample_rate) {
+    const total = Math.round(LOOP_TOTAL_SECONDS * sample_rate);
+    const release = Math.round(LOOP_RELEASE_SECONDS * sample_rate);
     const out = new Float32Array(total);
     let src = 0;
     for (let i = 0; i < total; i++) {
@@ -44,14 +55,12 @@ function render_looped(vag) {
     return out;
 }
 
-export function extract_sfx(tempdir, jpsxdec_jar, no_delete) {
+export function extract_sfx(tempdir, jpsxdec_jar) {
     const snd_bin = extract_snd_bin(tempdir, jpsxdec_jar);
     const bank = load_bank(snd_bin);
+    const rates = vag_rates(bank.vab);
 
     mkdirSync(OUTPUT_SFX_FOLDER, { recursive: true });
-
-    const wav_dir = join(tempdir, "sfx_wav");
-    mkdirSync(wav_dir, { recursive: true });
 
     for (let i = 1; i <= bank.vab.num_vags; i++) {
         const vag = bank.vab.vags[i];
@@ -61,11 +70,8 @@ export function extract_sfx(tempdir, jpsxdec_jar, no_delete) {
         }
 
         const name = `snd_${i - 1}`;
-        const wav = join(wav_dir, `${name}.wav`);
-        const pcm = vag.loop_start >= 0 ? render_looped(vag) : vag.pcm;
-        write_wav_mono(wav, pcm, SFX_SAMPLE_RATE);
-
-        try_spawn_process("ffmpeg", ["-i", wav, join(OUTPUT_SFX_FOLDER, `${name}.mp4`)]);
+        const pcm = vag.loop_start >= 0 ? render_looped(vag, rates[i]) : vag.pcm;
+        write_wav_mono(join(OUTPUT_SFX_FOLDER, `${name}.wav`), pcm, rates[i]);
     }
 
     const whoosh = bank.vab.vags[SND_34_SOURCE_VAG].pcm;
@@ -73,11 +79,5 @@ export function extract_sfx(tempdir, jpsxdec_jar, no_delete) {
     for (let i = 0; i < SND_34_REPEATS; i++) {
         quad.set(whoosh, i * whoosh.length);
     }
-    const wav = join(wav_dir, "snd_34.wav");
-    write_wav_mono(wav, quad, SFX_SAMPLE_RATE);
-    try_spawn_process("ffmpeg", ["-i", wav, join(OUTPUT_SFX_FOLDER, "snd_34.mp4")]);
-
-    if (!no_delete) {
-        rmSync(wav_dir, { recursive: true });
-    }
+    write_wav_mono(join(OUTPUT_SFX_FOLDER, "snd_34.wav"), quad, rates[SND_34_SOURCE_VAG]);
 }

@@ -172,43 +172,43 @@ type SFXStoreEntry = {
 };
 
 const SFX_STORE: SFXStoreEntry[] = [
-    { filename: "snd_0" },
-    { filename: "snd_1" },
-    { filename: "snd_2" },
-    { filename: "snd_3" },
-    { filename: "snd_4" },
-    { filename: "snd_5" },
-    { filename: "snd_6" },
-    { filename: "snd_7" },
-    { filename: "snd_8" },
-    { filename: "snd_9" },
-    { filename: "snd_10" },
-    { filename: "snd_11" },
-    { filename: "snd_12" },
-    { filename: "snd_13" },
-    { filename: "snd_14" },
-    { filename: "snd_15" },
-    { filename: "snd_16" },
-    { filename: "snd_17" },
-    { filename: "snd_18" },
-    { filename: "snd_19" },
-    { filename: "snd_20" },
-    { filename: "snd_21" },
-    { filename: "snd_22" },
-    { filename: "snd_23" },
-    { filename: "snd_24" },
-    { filename: "snd_25" },
-    { filename: "snd_26" },
-    { filename: "snd_27" },
-    { filename: "snd_28" },
-    { filename: "snd_29" },
-    { filename: "snd_30" },
-    { filename: "snd_31" },
-    { filename: "snd_32" },
-    { filename: "snd_33" },
-    { filename: "snd_34" },
-    { filename: "about_theme" },
-    { filename: "lain_theme" },
+    { filename: "snd_0.wav" },
+    { filename: "snd_1.wav" },
+    { filename: "snd_2.wav" },
+    { filename: "snd_3.wav" },
+    { filename: "snd_4.wav" },
+    { filename: "snd_5.wav" },
+    { filename: "snd_6.wav" },
+    { filename: "snd_7.wav" },
+    { filename: "snd_8.wav" },
+    { filename: "snd_9.wav" },
+    { filename: "snd_10.wav" },
+    { filename: "snd_11.wav" },
+    { filename: "snd_12.wav" },
+    { filename: "snd_13.wav" },
+    { filename: "snd_14.wav" },
+    { filename: "snd_15.wav" },
+    { filename: "snd_16.wav" },
+    { filename: "snd_17.wav" },
+    { filename: "snd_18.wav" },
+    { filename: "snd_19.wav" },
+    { filename: "snd_20.wav" },
+    { filename: "snd_21.wav" },
+    { filename: "snd_22.wav" },
+    { filename: "snd_23.wav" },
+    { filename: "snd_24.wav" },
+    { filename: "snd_25.wav" },
+    { filename: "snd_26.wav" },
+    { filename: "snd_27.wav" },
+    { filename: "snd_28.wav" },
+    { filename: "snd_29.wav" },
+    { filename: "snd_30.wav" },
+    { filename: "snd_31.wav" },
+    { filename: "snd_32.wav" },
+    { filename: "snd_33.wav" },
+    { filename: "snd_34.wav" },
+    { filename: "about_theme.mp4" },
+    { filename: "lain_theme.mp4" },
 ];
 
 export function play_audio(sfx: SFX, loop = false): void {
@@ -218,7 +218,7 @@ export function play_audio(sfx: SFX, loop = false): void {
 
     const entry = SFX_STORE[sfx];
 
-    entry.loaded_audio ??= new Audio(`/sfx/${entry.filename}.mp4`);
+    entry.loaded_audio ??= new Audio(`/sfx/${entry.filename}`);
     entry.loaded_audio.currentTime = 0;
     entry.loaded_audio.volume = 0.5;
     entry.loaded_audio.loop = loop;
@@ -792,7 +792,7 @@ export async function engine_create(): Promise<Engine> {
 
     // preload audio
     SFX_STORE.forEach((entry) => {
-        const audio = new Audio(`/sfx/${entry.filename}.mp4`);
+        const audio = new Audio(`/sfx/${entry.filename}`);
 
         audio.preload = "auto";
 
