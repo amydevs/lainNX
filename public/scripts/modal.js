@@ -1,5 +1,6 @@
 const LANG_KEY = "lainTSX-lang";
 const KEYBINDINGS_KEY = "lainTSX-keys"
+const GAMEPAD_KEYBINDINGS_KEY = "lainTSX-gamepad-keys"
 const SAVE_KEY = "lainTSX-save-v3"
 const LEGACY_SAVE_KEY = "lainSaveState";
 
@@ -18,10 +19,17 @@ const LAND_AND_BINDINGS_HTML = `
                         <div class="language-entry" data-lang="zh-CN" id="lang-zh-CN">Chinese</div>
                         </div>
                         <div class="modal-entry">
+                        <div class="input-source-switch">
+                                <button class="input-source-button active" id="input-keyboard-btn">Keyboard</button>
+                                <button class="input-source-button" id="input-controller-btn">Controller<span class="gamepad-status-dot" id="gamepad-status-dot"></span></button>
+                        </div>
                         <button class="reset-keybindings-button" id="reset-keybinds-btn">
                                 Reset keybindings
                         </button>
-                        <div class="keybindings" id="keybinds-list"></div>
+                        <div class="keybindings-stack">
+                                <div class="keybindings" id="keybinds-list"></div>
+                                <div class="keybindings hidden" id="gamepad-binds-list"></div>
+                        </div>
                 </div>
         </div>
 `
@@ -180,6 +188,20 @@ const DEFAULT_KEYBINDINGS = [
         "arrowleft", "arrowright", "arrowup", "arrowdown", "w", "e", "r", "q", "x", "d", "z", "s", "c", "v"
 ]
 
+const DEFAULT_GAMEPAD_MAPPINGS = [
+        14, 15, 12, 13, 4, 6, 5, 7, 1, 3, 0, 2, 8, 9
+]
+
+const GAMEPAD_BUTTON_NAMES = [
+        "A", "B", "X", "Y",
+        "LB", "RB", "LT", "RT",
+        "Back", "Start", "L3", "R3",
+        "D-Up", "D-Down", "D-Left", "D-Right",
+        "Home", "Touchpad",
+]
+
+const GAMEPAD_DEADZONE = 0.35
+
 class Modal {
         constructor() {
                 this.modal = null;
@@ -244,8 +266,13 @@ class Modal {
                 this.modal = document.getElementById("global-modal");
 
                 this.keybinds_list = document.getElementById("keybinds-list")
+                this.gamepad_binds_list = document.getElementById("gamepad-binds-list")
+                this.input_source = "keyboard"
+                this.gamepad_capture_raf = null
                 this.refresh_keybindings()
+                this.refresh_gamepad_mappings()
                 this.refresh_languages()
+                this.update_gamepad_status()
         }
 
         refresh_keybindings() {
@@ -269,7 +296,7 @@ class Modal {
 
                         const html = `
                         <div class="keybind">
-                            <div class="keybind-button" data-key="${v}">${k}</div>
+                            <div class="keybind-button" data-key="${v}">${this.keyboard_key_name(k)}</div>
                             <div>${data.icon}</div>
                             <div>${data.description}</div>
                         </div>`
@@ -298,6 +325,201 @@ class Modal {
                 )
         }
 
+        keyboard_key_name(k) {
+                return k === '' ? "unbound" : k
+        }
+
+        gamepad_button_name(btn) {
+                if (typeof btn !== "number" || btn < 0) {
+                        return "unbound"
+                }
+
+                return GAMEPAD_BUTTON_NAMES[btn] || `BTN ${btn}`
+        }
+
+        refresh_gamepad_mappings() {
+                this.gamepad_binds_list.innerHTML = ''
+
+                const stored = localStorage.getItem(GAMEPAD_KEYBINDINGS_KEY);
+                if (stored) {
+                        try {
+                                const parsed = JSON.parse(stored)
+                                if (Array.isArray(parsed) && parsed.length === KEY_DATA.length) {
+                                        this.gamepad_mappings = parsed
+                                }
+                        } catch (err) { }
+                }
+
+                if (!this.gamepad_mappings) {
+                        this.gamepad_mappings = DEFAULT_GAMEPAD_MAPPINGS.slice()
+                }
+
+                localStorage.setItem(GAMEPAD_KEYBINDINGS_KEY, JSON.stringify(this.gamepad_mappings))
+
+                this.gamepad_mappings.forEach((btn, v) => {
+                        const data = KEY_DATA[v]
+
+                        const html = `
+                        <div class="keybind">
+                            <div class="keybind-button gamepad-bind" data-key="${v}">${this.gamepad_button_name(btn)}</div>
+                            <div>${data.icon}</div>
+                            <div>${data.description}</div>
+                        </div>`
+
+                        this.gamepad_binds_list.insertAdjacentHTML("beforeend", html)
+                })
+
+                this.gamepad_binds_list.insertAdjacentHTML("beforeend",
+                        `
+                        <div class="keybind">
+                            <div>Left stick</div>
+                            <div></div>
+                            <div>Navigate (always active)</div>
+                        </div>
+                        `
+                )
+        }
+
+        set_gamepad_mappings(mappings) {
+                this.gamepad_mappings = mappings
+                localStorage.setItem(GAMEPAD_KEYBINDINGS_KEY, JSON.stringify(mappings))
+                this.refresh_gamepad_mappings()
+
+                window.dispatchEvent(new CustomEvent('updategamepadbindings'));
+        }
+
+        update_gamepad_status() {
+                const dot = document.getElementById("gamepad-status-dot")
+                const btn = document.getElementById("input-controller-btn")
+
+                const pads = typeof navigator.getGamepads === "function" ? navigator.getGamepads() : []
+                let connected = null
+                for (const pad of pads) {
+                        if (pad && pad.connected) {
+                                connected = pad
+                                break
+                        }
+                }
+
+                dot.classList.toggle("connected", connected !== null)
+                btn.title = connected
+                        ? connected.id
+                        : "No controller detected - connect one and press any button on it."
+        }
+
+        set_input_source(source) {
+                this.input_source = source
+                this.cancel_keyboard_capture()
+                this.cancel_gamepad_capture()
+
+                this.keybinds_list.classList.toggle("hidden", source !== "keyboard")
+                this.gamepad_binds_list.classList.toggle("hidden", source !== "gamepad")
+                document.getElementById("input-keyboard-btn").classList.toggle("active", source === "keyboard")
+                document.getElementById("input-controller-btn").classList.toggle("active", source === "gamepad")
+        }
+
+        get_pressed_gamepad_buttons() {
+                const pressed = new Set()
+
+                const pads = typeof navigator.getGamepads === "function" ? navigator.getGamepads() : []
+                for (const pad of pads) {
+                        if (!pad || !pad.connected) {
+                                continue
+                        }
+
+                        pad.buttons.forEach((b, i) => {
+                                if (b.pressed || b.value > GAMEPAD_DEADZONE) {
+                                        pressed.add(i)
+                                }
+                        })
+                }
+
+                return pressed
+        }
+
+        start_gamepad_capture() {
+                this.stop_gamepad_poll()
+
+                // buttons held when capture starts don't count until released,
+                // so the click/press that opened the capture can't bind itself
+                const held = this.get_pressed_gamepad_buttons()
+
+                const poll = () => {
+                        if (this.selected_gamepad_key === undefined) {
+                                this.gamepad_capture_raf = null
+                                return
+                        }
+
+                        const pressed = this.get_pressed_gamepad_buttons()
+
+                        for (const btn of [...held]) {
+                                if (!pressed.has(btn)) {
+                                        held.delete(btn)
+                                }
+                        }
+
+                        for (const btn of pressed) {
+                                if (!held.has(btn)) {
+                                        this.gamepad_capture_raf = null
+                                        this.assign_gamepad_button(btn)
+                                        return
+                                }
+                        }
+
+                        this.gamepad_capture_raf = requestAnimationFrame(poll)
+                }
+
+                this.gamepad_capture_raf = requestAnimationFrame(poll)
+        }
+
+        stop_gamepad_poll() {
+                if (this.gamepad_capture_raf !== null) {
+                        cancelAnimationFrame(this.gamepad_capture_raf)
+                        this.gamepad_capture_raf = null
+                }
+        }
+
+        assign_gamepad_button(btn) {
+                for (const [i, value] of this.gamepad_mappings.entries()) {
+                        if (value === btn) {
+                                this.gamepad_mappings[i] = -1
+                        }
+                }
+
+                this.gamepad_mappings[this.selected_gamepad_key] = btn
+                this.selected_gamepad_key = undefined
+                this.set_gamepad_mappings(this.gamepad_mappings)
+        }
+
+        cancel_keyboard_capture() {
+                if (this.selected_key !== undefined) {
+                        this.selected_key = undefined
+                        this.refresh_keybindings()
+                }
+        }
+
+        cancel_gamepad_capture() {
+                this.stop_gamepad_poll()
+                if (this.selected_gamepad_key !== undefined) {
+                        this.selected_gamepad_key = undefined
+                        this.refresh_gamepad_mappings()
+                }
+        }
+
+        handle_gamepad_bind_button_click(e) {
+                const clicked_entry = e.target.closest(".gamepad-bind");
+
+                document.querySelectorAll("#gamepad-binds-list .gamepad-bind").forEach(entry => {
+                        entry.classList.remove("active");
+                        entry.innerText = this.gamepad_button_name(this.gamepad_mappings[parseInt(entry.dataset.key)])
+                });
+
+                clicked_entry.classList.add("active");
+                clicked_entry.innerText = "> press a button <"
+                this.selected_gamepad_key = parseInt(clicked_entry.dataset.key)
+                this.start_gamepad_capture()
+        }
+
         bind_events() {
                 document.addEventListener("click", (e) => {
                         if (e.target.closest("#settings-button")) {
@@ -312,8 +534,18 @@ class Modal {
                                 this.handle_lang_entry_click(e)
                         }
 
-                        if (e.target.closest(".keybind-button")) {
+                        if (e.target.closest(".gamepad-bind")) {
+                                this.handle_gamepad_bind_button_click(e)
+                        } else if (e.target.closest(".keybind-button")) {
                                 this.handle_bind_button_click(e)
+                        }
+
+                        if (e.target.closest("#input-keyboard-btn")) {
+                                this.set_input_source("keyboard")
+                        }
+
+                        if (e.target.closest("#input-controller-btn")) {
+                                this.set_input_source("gamepad")
                         }
 
                         if (e.target.closest("#export-btn")) {
@@ -456,6 +688,9 @@ class Modal {
                                 this.handle_keydown(e.key)
                         }
                 });
+
+                window.addEventListener("gamepadconnected", () => this.update_gamepad_status());
+                window.addEventListener("gamepaddisconnected", () => this.update_gamepad_status());
 
                 document.getElementById("save-import").addEventListener("change", (e) => {
                         const file = e.target.files[0];
@@ -619,7 +854,12 @@ class Modal {
         }
 
         handle_reset_keybinds_click() {
-                this.set_keybindings(DEFAULT_KEYBINDINGS.slice())
+                if (this.input_source === "gamepad") {
+                        this.cancel_gamepad_capture()
+                        this.set_gamepad_mappings(DEFAULT_GAMEPAD_MAPPINGS.slice())
+                } else {
+                        this.set_keybindings(DEFAULT_KEYBINDINGS.slice())
+                }
         }
 
         refresh_languages() {
@@ -655,9 +895,9 @@ class Modal {
         handle_bind_button_click(e) {
                 const clicked_entry = e.target.closest(".keybind-button");
 
-                document.querySelectorAll(".keybind-button").forEach(entry => {
+                document.querySelectorAll("#keybinds-list .keybind-button").forEach(entry => {
                         entry.classList.remove("active");
-                        entry.innerText = this.keybindings[parseInt(entry.dataset.key)]
+                        entry.innerText = this.keyboard_key_name(this.keybindings[parseInt(entry.dataset.key)])
                 });
 
                 clicked_entry.classList.add("active");
@@ -704,6 +944,13 @@ class Modal {
         }
 
         handle_keydown(key) {
+                if (this.selected_gamepad_key !== undefined) {
+                        if (key === "Escape") {
+                                this.cancel_gamepad_capture()
+                        }
+                        return
+                }
+
                 if (this.selected_key !== undefined) {
                         if (key !== "Escape") {
                                 for (const [i, value] of this.keybindings.entries()) {
@@ -755,6 +1002,9 @@ class Modal {
         }
 
         close() {
+                this.cancel_keyboard_capture()
+                this.cancel_gamepad_capture()
+
                 this.modal.style.display = "none";
                 this.modal.classList.remove("show");
                 document.body.style.overflow = "auto";

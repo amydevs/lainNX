@@ -77,14 +77,12 @@ import { SiteScene } from "./site";
 
     window.addEventListener("gamepadconnected", (e: GamepadEvent) => {
         engine.gamepad_index = e.gamepad.index;
-        window.dispatchEvent(new CustomEvent("gamepadconnectionchange"));
     });
 
     window.addEventListener("gamepaddisconnected", (e: GamepadEvent) => {
         if (engine.gamepad_index === e.gamepad.index) {
             engine.gamepad_index = null;
         }
-        window.dispatchEvent(new CustomEvent("gamepadconnectionchange"));
     });
 
     window.addEventListener("updatelanguage", (_: Event) => {

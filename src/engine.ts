@@ -120,12 +120,6 @@ export enum Key {
 
 // number of entries in the Key enum (numeric enums produce reverse mappings too,
 // so divide the raw key count by two)
-// W3C "standard" gamepad mapping -> PSX Key
-// Buttons:
-//   0=Cross(A)   1=Circle(B)   2=Square(X)   3=Triangle(Y)
-//   4=L1(LB)     5=R1(RB)     6=L2(LT)     7=R2(RT)
-//   8=Select(Back)  9=Start  10-11=unused  12-15=D-pad(Up/Down/Left/Right)
-// Note: The actual mapping from these indices to Key enum values is handled in the mapping logic below.
 export const KEY_COUNT = Object.keys(Key).length / 2;
 
 export const GAMEPAD_DEADZONE = 0.35;
@@ -143,24 +137,16 @@ export const DEFAULT_GAMEPAD_MAPPINGS = [
     15, // Key.Right   -> D-Pad Right
     12, // Key.Up      -> D-Pad Up
     13, // Key.Down    -> D-Pad Down
-    4,  // Key.L1      -> LB
-    6,  // Key.L2      -> LT
-    5,  // Key.R1      -> RB
-    7,  // Key.R2      -> RT
-    1,  // Key.Circle   -> B
-    3,  // Key.Triangle -> Y
-    0,  // Key.Cross    -> A
-    2,  // Key.Square   -> X
-    8,  // Key.Select   -> Back
-    9,  // Key.Start    -> Start
-];
-
-export const GAMEPAD_BUTTON_NAMES = [
-    "A", "B", "X", "Y",
-    "LB", "RB", "LT", "RT",
-    "Back", "Start", "L3", "R3",
-    "D-Up", "D-Down", "D-Left", "D-Right",
-    "Home", "Touchpad",
+    4, // Key.L1      -> LB
+    6, // Key.L2      -> LT
+    5, // Key.R1      -> RB
+    7, // Key.R2      -> RT
+    1, // Key.Circle   -> B
+    3, // Key.Triangle -> Y
+    0, // Key.Cross    -> A
+    2, // Key.Square   -> X
+    8, // Key.Select   -> Back
+    9, // Key.Start    -> Start
 ];
 
 // resources (textures/models/etc)
@@ -557,10 +543,12 @@ export function read_key_mappings(): Record<string, Key> {
 export function read_gamepad_mappings(): number[] {
     const stored = localStorage.getItem(GAMEPAD_KEYBINDINGS_KEY);
     if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length === KEY_COUNT) {
-            return parsed.slice();
-        }
+        try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length === KEY_COUNT) {
+                return parsed.slice();
+            }
+        } catch (err) {}
     }
     return DEFAULT_GAMEPAD_MAPPINGS.slice();
 }
@@ -653,8 +641,6 @@ export class Engine {
         this.active_input = "keyboard";
         this.gamepad_index = null;
         this.gamepad_prev = new Array<boolean>(KEY_COUNT).fill(false);
-
-        this.update_input_hud();
     }
 
     handle_debug_keys(): void {
@@ -690,22 +676,7 @@ export class Engine {
     }
 
     set_active_input(source: "keyboard" | "gamepad"): void {
-        if (this.active_input === source) {
-            return;
-        }
-
         this.active_input = source;
-        this.update_input_hud();
-    }
-
-    update_input_hud(): void {
-        const el = document.getElementById("input-source");
-        if (!el) {
-            return;
-        }
-
-        el.textContent = this.active_input === "gamepad" ? "input: gamepad" : "input: keyboard";
-        el.classList.toggle("gamepad", this.active_input === "gamepad");
     }
 
     // polls the Gamepad API every frame and feeds rising edges into key_states.

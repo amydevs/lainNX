@@ -357,6 +357,53 @@ main {
     font-size: 1em;
 }
 
+.input-source-switch {
+    display: flex;
+    gap: 0.5em;
+}
+
+.input-source-button {
+    flex: 1;
+    background: black;
+    color: white;
+    border: 1px solid white;
+    cursor: pointer;
+    font-size: 1em;
+    padding: 0.2em;
+}
+
+.input-source-button:hover,
+.input-source-button.active {
+    background: white;
+    color: black;
+}
+
+.keybindings-stack {
+    display: grid;
+}
+
+.keybindings-stack > .keybindings {
+    grid-area: 1 / 1;
+    align-content: start;
+}
+
+.keybindings-stack > .keybindings.hidden {
+    visibility: hidden;
+}
+
+.gamepad-status-dot {
+    display: inline-block;
+    width: 0.5em;
+    height: 0.5em;
+    border-radius: 50%;
+    background: #555;
+    margin-left: 0.5em;
+}
+
+.gamepad-status-dot.connected {
+    background: lime;
+}
+
 #loading {
     width: 100%;
     height: 100%;
