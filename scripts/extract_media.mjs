@@ -38,6 +38,12 @@ export function extract_video(tempdir, jpsxdec_jar, no_delete) {
                 join(tempdir, movieDir, file),
                 "-pix_fmt",
                 "yuv420p",
+                "-preset",
+                "veryslow",
+                "-level",
+                "31",
+                "-ar",
+                "44100",
                 join(OUTPUT_MOVIE_FOLDER, file.replace("avi", "mp4")),
             ]);
         }
@@ -73,6 +79,8 @@ export function extract_audio(tempdir, jpsxdec_jar, no_delete) {
         try_spawn_process("ffmpeg", [
             "-i",
             join(tempdir, "XA", file),
+            "-ar",
+            "44100",
             join(OUTPUT_AUDIO_FOLDER, file.replace("wav", "mp4")),
         ]);
     }
