@@ -50,7 +50,6 @@ import { IdleScene, update_idle_scene } from "./idle";
 import { get_saved_state, GameState } from "./save";
 import { TaKScene, update_tak_scene } from "./tak";
 import { LoadingScene, update_loading_scene } from "./loading";
-import { Button } from "@nx.js/constants";
 import { get_fullscreen_media_subtitles, get_fullscreen_media_video } from "./media_player";
 
 const W = 800;
@@ -204,43 +203,43 @@ type SFXStoreEntry = {
 };
 
 const SFX_STORE: SFXStoreEntry[] = [
-    { filename: "snd_0.wav" },
-    { filename: "snd_1.wav" },
-    { filename: "snd_2.wav" },
-    { filename: "snd_3.wav" },
-    { filename: "snd_4.wav" },
-    { filename: "snd_5.wav" },
-    { filename: "snd_6.wav" },
-    { filename: "snd_7.wav" },
-    { filename: "snd_8.wav" },
-    { filename: "snd_9.wav" },
-    { filename: "snd_10.wav" },
-    { filename: "snd_11.wav" },
-    { filename: "snd_12.wav" },
-    { filename: "snd_13.wav" },
-    { filename: "snd_14.wav" },
-    { filename: "snd_15.wav" },
-    { filename: "snd_16.wav" },
-    { filename: "snd_17.wav" },
-    { filename: "snd_18.wav" },
-    { filename: "snd_19.wav" },
-    { filename: "snd_20.wav" },
-    { filename: "snd_21.wav" },
-    { filename: "snd_22.wav" },
-    { filename: "snd_23.wav" },
-    { filename: "snd_24.wav" },
-    { filename: "snd_25.wav" },
-    { filename: "snd_26.wav" },
-    { filename: "snd_27.wav" },
-    { filename: "snd_28.wav" },
-    { filename: "snd_29.wav" },
-    { filename: "snd_30.wav" },
-    { filename: "snd_31.wav" },
-    { filename: "snd_32.wav" },
-    { filename: "snd_33.wav" },
-    { filename: "snd_34.wav" },
-    { filename: "about_theme.mp4" },
-    { filename: "lain_theme.mp4" },
+    { filename: "snd_0" },
+    { filename: "snd_1" },
+    { filename: "snd_2" },
+    { filename: "snd_3" },
+    { filename: "snd_4" },
+    { filename: "snd_5" },
+    { filename: "snd_6" },
+    { filename: "snd_7" },
+    { filename: "snd_8" },
+    { filename: "snd_9" },
+    { filename: "snd_10" },
+    { filename: "snd_11" },
+    { filename: "snd_12" },
+    { filename: "snd_13" },
+    { filename: "snd_14" },
+    { filename: "snd_15" },
+    { filename: "snd_16" },
+    { filename: "snd_17" },
+    { filename: "snd_18" },
+    { filename: "snd_19" },
+    { filename: "snd_20" },
+    { filename: "snd_21" },
+    { filename: "snd_22" },
+    { filename: "snd_23" },
+    { filename: "snd_24" },
+    { filename: "snd_25" },
+    { filename: "snd_26" },
+    { filename: "snd_27" },
+    { filename: "snd_28" },
+    { filename: "snd_29" },
+    { filename: "snd_30" },
+    { filename: "snd_31" },
+    { filename: "snd_32" },
+    { filename: "snd_33" },
+    { filename: "snd_34" },
+    { filename: "about_theme" },
+    { filename: "lain_theme" },
 ];
 
 export function play_audio(sfx: SFX, loop = false): void {
@@ -559,20 +558,20 @@ export function read_key_mappings(): Record<string, Key> {
     }
 
     return {
-        [Button.Down]: Key.Down,
-        [Button.Left]: Key.Left,
-        [Button.Up]: Key.Up,
-        [Button.Right]: Key.Right,
-        [Button.A]: Key.Circle,
-        [Button.B]: Key.Cross,
-        [Button.X]: Key.Triangle,
-        [Button.Y]: Key.Square,
-        [Button.ZR]: Key.R2,
-        [Button.ZL]: Key.L2,
-        [Button.L]: Key.L1,
-        [Button.R]: Key.R1,
-        [Button.Plus]: Key.Start,
-        [Button.Minus]: Key.Select,
+        arrowdown: Key.Down,
+        arrowleft: Key.Left,
+        arrowup: Key.Up,
+        arrowright: Key.Right,
+        x: Key.Circle,
+        z: Key.Cross,
+        d: Key.Triangle,
+        s: Key.Square,
+        q: Key.R2,
+        e: Key.L2,
+        w: Key.L1,
+        r: Key.R1,
+        v: Key.Start,
+        c: Key.Select,
     };
 }
 
@@ -965,7 +964,9 @@ export async function engine_create(): Promise<Engine> {
 
     // preload audio
     SFX_STORE.forEach((entry) => {
-        const audio = new Audio(`${__ROOT_PATH__}/sfx/${entry.filename}.mp4`);
+        const base_path = `${__ROOT_PATH__}/sfx/${entry.filename}`;
+        const is_webm = Switch.statSync(`${base_path}.webm`);
+        const audio = new Audio(!is_webm ? `${base_path}.mp4` : `${base_path}.webm`);
 
         // audio.preload = "auto";
 
