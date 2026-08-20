@@ -625,13 +625,13 @@ function handle_keys(
     switch (boot.submenu) {
         case BootSubmenu.Main:
             if (key_states[Key.Up] && boot.active_menu_component !== BootMenuComponent.AuthorizeUser) {
-                play_audio(SFX.SND_0);
+                play_audio(SFX.SND_1);
 
                 boot.active_menu_component = BootMenuComponent.AuthorizeUser;
                 boot.authorize_user.set_texture(Texture.Authorize_User_Active);
                 boot.load_data.set_texture(Texture.Load_Data_Inactive);
             } else if (key_states[Key.Down] && boot.active_menu_component !== BootMenuComponent.LoadData) {
-                play_audio(SFX.SND_0);
+                play_audio(SFX.SND_1);
 
                 boot.active_menu_component = BootMenuComponent.LoadData;
                 boot.load_data.set_texture(Texture.Load_Data_Active);

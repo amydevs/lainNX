@@ -1,4 +1,4 @@
-import { engine_create } from "./engine";
+import { engine_create, get_user_language, read_key_mappings, read_gamepad_mappings, SceneKind } from "./engine";
 import { check_if_legacy_save_and_upgrade } from "./save";
 import { Button } from "@nx.js/constants";
 
@@ -87,6 +87,20 @@ import { Button } from "@nx.js/constants";
     // window.addEventListener("updatekeybindings", (_: Event) => {
     //     engine.key_mappings = read_key_mappings();
     // });
+
+    window.addEventListener("updategamepadbindings", (_: Event) => {
+        engine.gamepad_mappings = read_gamepad_mappings();
+    });
+
+    window.addEventListener("gamepadconnected", (e: GamepadEvent) => {
+        engine.gamepad_index = e.gamepad.index;
+    });
+
+    window.addEventListener("gamepaddisconnected", (e: GamepadEvent) => {
+        if (engine.gamepad_index === e.gamepad.index) {
+            engine.gamepad_index = null;
+        }
+    });
 
     // window.addEventListener("updatelanguage", (_: Event) => {
     //     const track_el = document.getElementById("track") as HTMLTrackElement;

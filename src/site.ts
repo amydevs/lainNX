@@ -1789,7 +1789,7 @@ function navigate(site: SiteScene, direction: Direction, time: number, rotate_im
 
         set_node(site, cursor_location, time);
 
-        play_audio(SFX.SND_0);
+        play_audio(SFX.SND_1);
     }
 }
 
