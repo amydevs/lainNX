@@ -6,79 +6,81 @@ name: Build
 on: push
 
 env:
-  ROOT_PATH: sdmc:/switch/LainNX
-  NRO_ZIP_NAME: ${{ github.event.repository.name }}_nro.zip
+    ROOT_PATH: sdmc:/switch/LainNX
+    NRO_ZIP_NAME: ${{ github.event.repository.name }}_nro.zip
 
 permissions:
-  contents: write
+    contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: "npm"
-      - name: Cache voice files
-        uses: actions/cache@v6
-        with:
-          path: public/voice
-          key: ${{ runner.os }}-voice
-      - run: npm ci
-      - name: Create dummy assets
-        run: |
-          dummy_file_size=$((1024 * 1024 * 5))
-          mkdir -p ./src/static/sprites/lain
-          shred -s $dummy_file_size - > ./src/static/sprites/game.png
-          i=0
-          while [ $i -le 25 ]
-          do
-              shred -s $dummy_file_size - > "./src/static/sprites/lain/lain_frames_$i.png"
-              i=$((i + 1))
-          done
-          i=0
-          while [ $i -le 2 ]
-          do
-              shred -s $dummy_file_size - > "./src/static/sprites/lain/lain_talk_frames_$i.png"
-              i=$((i + 1))
-          done
-      - name: Get voice files
-        run: |
-          if [ ! -d "./public/voice" ]; then
-            mkdir ./public/voice
-            wget -q --show-progress \
-                -U "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" \
-                -O "./files.zip" \
-                "$COMPRESSED_ASSETS_URL"
-            unzip -j files.zip "voice/*" -d ./public/voice
-          fi
-        env:
-          COMPRESSED_ASSETS_URL: ${{ secrets.COMPRESSED_ASSETS_URL }}
-      - run: npm run build
-      - run: npm run nro -- --fat
-      - name: Create bundle
-        run: |
-          if [[ "$ROOT_PATH" == sdmc:* ]]; then
-            base_bundle_path="./bundle/${ROOT_PATH:5}"
-            mkdir -p $base_bundle_path
-            touch "${base_bundle_path}/_EXTRACT FOLDERS FROM laingame.com TO HERE.txt"
-            touch "${base_bundle_path}/_OR PLACE laingame.com HERE.txt"
-          fi
-          package_name=$(cat package.json | jq -r '.name')
-          mkdir -p "./bundle/switch/${package_name}"
-          cp "${package_name}.nro" "./bundle/switch/${package_name}"
-          cd bundle
-          zip -r ../${{ env.NRO_ZIP_NAME }} .
-          cd -
-      - uses: actions/upload-artifact@v7
-        with:
-          name: ${{ env.NRO_ZIP_NAME }}
-          path: ./bundle/
-      - name: Release
-        uses: softprops/action-gh-release@v3
-        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
-        with:
-          generate_release_notes: true
-          files: ${{ env.NRO_ZIP_NAME }}
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+                  cache: "npm"
+            - name: Cache voice files
+              uses: actions/cache@v6
+              with:
+                  path: public/voice
+                  key: ${{ runner.os }}-voice
+            - run: npm ci
+            - name: Run tests
+              run: npm test -- run
+            - name: Create dummy assets
+              run: |
+                  dummy_file_size=$((1024 * 1024 * 5))
+                  mkdir -p ./src/static/sprites/lain
+                  shred -s $dummy_file_size - > ./src/static/sprites/game.png
+                  i=0
+                  while [ $i -le 25 ]
+                  do
+                      shred -s $dummy_file_size - > "./src/static/sprites/lain/lain_frames_$i.png"
+                      i=$((i + 1))
+                  done
+                  i=0
+                  while [ $i -le 2 ]
+                  do
+                      shred -s $dummy_file_size - > "./src/static/sprites/lain/lain_talk_frames_$i.png"
+                      i=$((i + 1))
+                  done
+            - name: Get voice files
+              run: |
+                  if [ ! -d "./public/voice" ]; then
+                    mkdir ./public/voice
+                    wget -q --show-progress \
+                        -U "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" \
+                        -O "./files.zip" \
+                        "$COMPRESSED_ASSETS_URL"
+                    unzip -j files.zip "voice/*" -d ./public/voice
+                  fi
+              env:
+                  COMPRESSED_ASSETS_URL: ${{ secrets.COMPRESSED_ASSETS_URL }}
+            - run: npm run build
+            - run: npm run nro -- --fat
+            - name: Create bundle
+              run: |
+                  if [[ "$ROOT_PATH" == sdmc:* ]]; then
+                    base_bundle_path="./bundle/${ROOT_PATH:5}"
+                    mkdir -p $base_bundle_path
+                    touch "${base_bundle_path}/_EXTRACT FOLDERS FROM laingame.com TO HERE.txt"
+                    touch "${base_bundle_path}/_OR PLACE laingame.com HERE.txt"
+                  fi
+                  package_name=$(cat package.json | jq -r '.name')
+                  mkdir -p "./bundle/switch/${package_name}"
+                  cp "${package_name}.nro" "./bundle/switch/${package_name}"
+                  cd bundle
+                  zip -r ../${{ env.NRO_ZIP_NAME }} .
+                  cd -
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: ${{ env.NRO_ZIP_NAME }}
+                  path: ./bundle/
+            - name: Release
+              uses: softprops/action-gh-release@v3
+              if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+              with:
+                  generate_release_notes: true
+                  files: ${{ env.NRO_ZIP_NAME }}
