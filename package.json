@@ -7,6 +7,7 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
+        "test": "vitest",
         "postinstall": "patch-package",
         "preview": "vite preview",
         "nro": "nxjs-nro",
@@ -30,6 +31,7 @@
         "vite-plugin-gltf": "^4.0.0",
         "vite-plugin-node-polyfills": "^0.28.0",
         "vite-plugin-static-copy": "^4.1.1",
+        "vitest": "^4.1.11",
         "yargs": "^17.7.3"
     },
     "dependencies": {

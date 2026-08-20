@@ -104,11 +104,11 @@ async function extract(compressed_files_path: string): Promise<void> {
     console.debug(`finished extraction at ${new Date().toISOString()}`);
 }
 
-function to_readable_gamepad_mappings(mappings: number[]): Record<string, string> {
+export function to_readable_gamepad_mappings(mappings: number[]): Record<string, string> {
     return Object.fromEntries(mappings.map((action, key) => [Button[action], Key[key]]));
 }
 
-function from_readable_gamepad_mappings(readable_keymap: Record<string, string>): number[] {
+export function from_readable_gamepad_mappings(readable_keymap: Record<string, string>): number[] {
     const keymap: number[] = [];
     for (const [action, key] of Object.entries(readable_keymap)) {
         const action_index = Button[action as keyof typeof Button];
@@ -122,11 +122,11 @@ function from_readable_gamepad_mappings(readable_keymap: Record<string, string>)
     return keymap;
 }
 
-function to_readable_key_mappings(mappings: Record<string, Key>): Record<string, string> {
+export function to_readable_key_mappings(mappings: Record<string, Key>): Record<string, string> {
     return Object.fromEntries(Object.entries(mappings).map(([key, action]) => [key, Key[action]]));
 }
 
-function from_readable_key_mappings(readable_keymap: Record<string, string>): Record<string, Key> {
+export function from_readable_key_mappings(readable_keymap: Record<string, string>): Record<string, Key> {
     const keymap: Record<string, Key> = {};
     for (const [key, action] of Object.entries(readable_keymap)) {
         const action_index = Key[action as keyof typeof Key];
