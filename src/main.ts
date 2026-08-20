@@ -56,7 +56,7 @@ import { check_if_legacy_save_and_upgrade } from "./save";
 
             engine.pressed_keys.add(event.key);
         },
-        false
+        false,
     );
 
     window.addEventListener(
@@ -71,7 +71,7 @@ import { check_if_legacy_save_and_upgrade } from "./save";
 
             engine.pressed_keys.delete(event.key);
         },
-        false
+        false,
     );
 
     window.addEventListener("updatekeybindings", () => {
