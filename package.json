@@ -2,7 +2,7 @@
     "name": "LainNX",
     "author": "amydev",
     "private": true,
-    "version": "0.4.4-nx.5",
+    "version": "0.4.4-nx.6",
     "type": "module",
     "scripts": {
         "dev": "vite",
