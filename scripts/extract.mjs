@@ -4,6 +4,8 @@ import { join, resolve } from "path";
 import { extract_video, extract_audio } from "./extract_media.mjs";
 import { extract_voice } from "./extract_voice.mjs";
 import { extract_lapks } from "./extract_lapks.mjs";
+import { extract_sfx } from "./extract_sfx.mjs";
+import { extract_music } from "./extract_music.mjs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { extract_site_images } from "./extract_site_images.mjs";
@@ -58,6 +60,14 @@ const argv = yargs(hideBin(process.argv))
     .option("no_site_images", {
         type: "boolean",
         description: "Don't extract sitea.bin or siteb.bin",
+    })
+    .option("no_sfx", {
+        type: "boolean",
+        description: "Don't extract sound effects from SND.BIN",
+    })
+    .option("no_music", {
+        type: "boolean",
+        description: "Don't render music (lain_theme/about_theme) from SND.BIN",
     }).argv;
 
 mkdirSync(argv.tempdir, { recursive: true });
@@ -100,6 +110,14 @@ if (!argv.no_sprites) {
 
 if (!argv.no_site_images) {
     extract_site_images(argv.tempdir, jpsxdec_jar);
+}
+
+if (!argv.no_sfx) {
+    extract_sfx(argv.tempdir, jpsxdec_jar, argv.no_delete);
+}
+
+if (!argv.no_music) {
+    extract_music(argv.tempdir, jpsxdec_jar, argv.no_delete);
 }
 
 if (!argv.no_delete) {

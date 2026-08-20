@@ -1,6 +1,5 @@
-import { engine_create } from "./engine";
+import { engine_create, read_gamepad_mappings, read_key_mappings } from "./engine";
 import { check_if_legacy_save_and_upgrade } from "./save";
-import { Button } from "@nx.js/constants";
 
 (async () => {
     // due to nx.js 1.0.0-beta.6, init needs to happen in a separate import for whatever reason
@@ -16,50 +15,6 @@ import { Button } from "@nx.js/constants";
     let time_paused = 0;
 
     const engine = await engine_create();
-
-    const axis_deadzone = 0.25;
-    const axis_map: Record<number, { positive: Button; negative: Button }> = {
-        0: {
-            positive: Button.Right,
-            negative: Button.Left,
-        },
-        1: {
-            positive: Button.Down,
-            negative: Button.Up,
-        },
-    };
-    function update_controls() {
-        const pads = navigator.getGamepads();
-        const player_one = pads[0];
-        if (player_one) {
-            const buttons_pressed_arr = player_one.buttons.map((button) => button.pressed);
-            // handle axis
-            for (const [i, axis] of player_one.axes.entries()) {
-                const axis_map_value = axis_map[i];
-                if (axis_map_value != null) {
-                    if (axis > axis_deadzone) {
-                        buttons_pressed_arr[axis_map_value.positive] = true;
-                    } else if (axis < -1 * axis_deadzone) {
-                        buttons_pressed_arr[axis_map_value.negative] = true;
-                    }
-                }
-            }
-            // handle button presses
-            for (const [i, pressed] of buttons_pressed_arr.entries()) {
-                const i_str = i.toString();
-                const is_repeat_pressed = engine.pressed_keys.has(i_str);
-                if (!is_repeat_pressed && pressed) {
-                    engine.pressed_keys.add(i_str);
-                } else if (is_repeat_pressed && !pressed) {
-                    engine.pressed_keys.delete(i_str);
-                }
-                const psx_key = engine.key_mappings[i_str];
-                if (psx_key != null && !is_repeat_pressed && pressed) {
-                    engine.key_states[psx_key] = true;
-                }
-            }
-        }
-    }
 
     function animate(): void {
         if (!is_page_visible) {
@@ -78,15 +33,66 @@ import { Button } from "@nx.js/constants";
 
         const delta = (current_time - last_time) / 1000;
 
-        update_controls();
         engine.update(current_time, delta);
 
         last_time = current_time;
     }
 
-    // window.addEventListener("updatekeybindings", (_: Event) => {
-    //     engine.key_mappings = read_key_mappings();
-    // });
+    window.addEventListener(
+        "keydown",
+        (_event) => {
+            const event = _event as KeyboardEvent;
+            if (event.repeat || event.ctrlKey) {
+                return;
+            }
+
+            engine.set_active_input("keyboard");
+
+            const key = event.key.toLowerCase();
+            if (key in engine.key_mappings) {
+                const psx_key = engine.key_mappings[key];
+                engine.key_states[psx_key] = true;
+            }
+
+            engine.pressed_keys.add(event.key);
+        },
+        false,
+    );
+
+    window.addEventListener(
+        "keyup",
+        (_event) => {
+            const event = _event as KeyboardEvent;
+            const key = event.key.toLowerCase();
+            if (key in engine.key_mappings) {
+                const psx_key = engine.key_mappings[key];
+                engine.key_states[psx_key] = false;
+            }
+
+            engine.pressed_keys.delete(event.key);
+        },
+        false,
+    );
+
+    window.addEventListener("updatekeybindings", () => {
+        engine.key_mappings = read_key_mappings();
+    });
+
+    window.addEventListener("updategamepadbindings", () => {
+        engine.gamepad_mappings = read_gamepad_mappings();
+    });
+
+    window.addEventListener("gamepadconnected", (_e) => {
+        const e = _e as GamepadEvent;
+        engine.gamepad_index = e.gamepad.index;
+    });
+
+    window.addEventListener("gamepaddisconnected", (_e) => {
+        const e = _e as GamepadEvent;
+        if (engine.gamepad_index === e.gamepad.index) {
+            engine.gamepad_index = null;
+        }
+    });
 
     // window.addEventListener("updatelanguage", (_: Event) => {
     //     const track_el = document.getElementById("track") as HTMLTrackElement;

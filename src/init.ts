@@ -1,10 +1,12 @@
 import JSONC from "tiny-jsonc";
 import { ZipReader } from "@zip.js/zip.js";
 import {
-    get_user_language,
-    Key,
+    GAMEPAD_KEYBINDINGS_KEY,
     KEYBINDINGS_KEY,
     LANG_KEY,
+    get_user_language,
+    Key,
+    read_gamepad_mappings,
     read_key_mappings,
     SUPPORTED_LANGUAGES,
 } from "./engine";
@@ -16,25 +18,25 @@ const ASSET_FILE_NAME_FILTER_REGEX =
 
 function apply_global_polyfills() {
     const property_descriptors: Record<string, PropertyDescriptor> = {
-        "self": {
+        self: {
             value: window,
             writable: false,
             configurable: false,
             enumerable: true,
         },
-        "HTMLVideoElement": {
+        HTMLVideoElement: {
             value: Video,
             writable: false,
             configurable: false,
             enumerable: true,
         },
-        "HTMLAudioElement": {
+        HTMLAudioElement: {
             value: Audio,
             writable: false,
             configurable: false,
             enumerable: true,
-        }
-    }
+        },
+    };
     for (const e of [globalThis, window]) {
         Object.defineProperties(e, property_descriptors);
     }
@@ -102,19 +104,39 @@ async function extract(compressed_files_path: string): Promise<void> {
     console.debug(`finished extraction at ${new Date().toISOString()}`);
 }
 
-function to_readable_key_mappings(keymap: Record<string, Key>): Record<string, string> {
-    return Object.fromEntries(
-        Object.entries(keymap).map(([action, key]) => [Button[parseInt(action.toString())], Key[key]]),
-    );
+function to_readable_gamepad_mappings(mappings: number[]): Record<string, string> {
+    return Object.fromEntries(mappings.map((action, key) => [Button[action], Key[key]]));
+}
+
+function from_readable_gamepad_mappings(readable_keymap: Record<string, string>): number[] {
+    const keymap: number[] = [];
+    for (const [action, key] of Object.entries(readable_keymap)) {
+        const action_index = Button[action as keyof typeof Button];
+        const key_index = Key[key as keyof typeof Key];
+        if (action_index == null || key_index == null) {
+            console.warn(`invalid gamepad mapping: ${action} -> ${key}`);
+            continue;
+        }
+        keymap[key_index] = action_index;
+    }
+    return keymap;
+}
+
+function to_readable_key_mappings(mappings: Record<string, Key>): Record<string, string> {
+    return Object.fromEntries(Object.entries(mappings).map(([key, action]) => [key, Key[action]]));
 }
 
 function from_readable_key_mappings(readable_keymap: Record<string, string>): Record<string, Key> {
-    return Object.fromEntries(
-        Object.entries(readable_keymap).map(([action, key]) => [
-            Button[action as keyof typeof Button],
-            Key[key as keyof typeof Key],
-        ]),
-    );
+    const keymap: Record<string, Key> = {};
+    for (const [key, action] of Object.entries(readable_keymap)) {
+        const action_index = Key[action as keyof typeof Key];
+        if (action_index == null) {
+            console.warn(`invalid key mapping: ${key} -> ${action}`);
+            continue;
+        }
+        keymap[key] = action_index;
+    }
+    return keymap;
 }
 
 export async function init() {
@@ -137,6 +159,7 @@ export async function init() {
         const config = {
             COMMENT_RESERVE_KEY: "",
             [LANG_KEY]: get_user_language().code,
+            [GAMEPAD_KEYBINDINGS_KEY]: to_readable_gamepad_mappings(read_gamepad_mappings()),
             [KEYBINDINGS_KEY]: to_readable_key_mappings(read_key_mappings()),
         };
         const config_json = JSON.stringify(config, null, 4);
@@ -153,6 +176,14 @@ export async function init() {
                 throw new Error("could not parse config file");
             }
             localStorage!.setItem(LANG_KEY, config_file[LANG_KEY as unknown as keyof typeof config_file]);
+            localStorage!.setItem(
+                GAMEPAD_KEYBINDINGS_KEY,
+                JSON.stringify(
+                    from_readable_gamepad_mappings(
+                        config_file[GAMEPAD_KEYBINDINGS_KEY as unknown as keyof typeof config_file],
+                    ),
+                ),
+            );
             localStorage!.setItem(
                 KEYBINDINGS_KEY,
                 JSON.stringify(
