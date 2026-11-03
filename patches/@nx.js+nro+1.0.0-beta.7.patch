@@ -1,0 +1,66 @@
+diff --git a/node_modules/@nx.js/nro/dist/main.js b/node_modules/@nx.js/nro/dist/main.js
+index d4f2cd6..80494ea 100644
+--- a/node_modules/@nx.js/nro/dist/main.js
++++ b/node_modules/@nx.js/nro/dist/main.js
+@@ -2,6 +2,7 @@
+ import bytes from 'bytes';
+ import chalk from 'chalk';
+ import { writeFileSync, readdirSync, readFileSync, statSync, existsSync, } from 'node:fs';
++import { join } from 'node:path';
+ import { pathToFileURL, fileURLToPath } from 'node:url';
+ import { relative } from 'node:path';
+ import { NACP } from '@tootallnate/nacp';
+@@ -82,25 +83,35 @@ const romfs = nxjsNro.romfs
+     : Object.create(null);
+ console.log();
+ console.log(chalk.bold('RomFS Files:'));
+-function walk(dir, dirEntry) {
+-    for (const name of readdirSync(dir)) {
+-        const fileUrl = new URL(name, dir);
+-        const stat = statSync(fileUrl);
+-        if (stat.isDirectory()) {
+-            const entry = dirEntry[name] ?? Object.create(null);
+-            if (entry instanceof Blob) {
+-                throw new Error(`Expected directory: ${fileUrl}`);
++function walk(rootDir, rootEntry) {
++    const stack = [
++        { dir: fileURLToPath(rootDir), dirEntry: rootEntry },
++    ];
++
++    while (stack.length > 0) {
++        const { dir, dirEntry } = stack.pop();
++
++        for (const name of readdirSync(dir)) {
++            const filePath = join(dir, name);
++            const stat = statSync(filePath);
++            if (stat.isDirectory()) {
++                const entry = dirEntry[name] ?? Object.create(null);
++                if (entry instanceof Blob) {
++                    throw new Error(`Expected directory: ${filePath}`);
++                }
++                dirEntry[name] = entry;
++                stack.push({ dir: filePath, dirEntry: entry });
++            } else if (stat.isFile()) {
++                const blob = new Blob([readFileSync(filePath)]);
++                console.log(
++                    `  ${chalk.cyan(
++                        relative(romfsDirPath, filePath),
++                    )} (${bytes(blob.size).toLowerCase()})`,
++                );
++                dirEntry[name] = blob;
++            } else {
++                throw new Error(`Unsupported file type: ${filePath}`);
+             }
+-            dirEntry[name] = entry;
+-            walk(new URL(`${fileUrl}/`), entry);
+-        }
+-        else if (stat.isFile()) {
+-            const blob = new Blob([readFileSync(fileUrl)]);
+-            console.log(`  ${chalk.cyan(relative(romfsDirPath, fileURLToPath(fileUrl)))} (${bytes(blob.size).toLowerCase()})`);
+-            dirEntry[name] = blob;
+-        }
+-        else {
+-            throw new Error(`Unsupported file type: ${fileUrl}`);
+         }
+     }
+ }
