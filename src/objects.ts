@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import * as uWrap from "uwrap";
+import { drawTextLayout, layoutText, type TextContext } from "canvas-txt";
 import {
     ModelKind,
     SPRITE_ATLAS_DIM,
@@ -936,7 +936,7 @@ export class FullscreenMediaSubtitles3D extends Fullscreen3D {
     line_height_px: number;
     background_padding_x_px: number;
     max_width_px: number;
-    split: uWrap.Split;
+    font: string;
 
     constructor(video: Video, media_audio: MediaAudio, params: FullscreenMediaSubtitles3DParameters) {
         const canvas = new OffscreenCanvas(640, 480);
@@ -965,11 +965,8 @@ export class FullscreenMediaSubtitles3D extends Fullscreen3D {
         this.line_height_px = 1.5 * this.font_px;
         this.background_padding_x_px = (this.line_height_px - this.font_px) / 2;
         this.max_width_px = this.canvas.width - 50;
-        this.canvas_ctx.font = `${this.font_px}px system-ui`;
-        this.canvas_ctx.textAlign = "center";
-        this.canvas_ctx.textBaseline = "middle";
+        this.font = "system-ui";
         (this.canvas_ctx as any).letterSpacing = "0px";
-        this.split = uWrap.varPreLine(this.canvas_ctx as unknown as CanvasRenderingContext2D).split;
 
         this.material.transparent = true;
 
@@ -1030,38 +1027,31 @@ export class FullscreenMediaSubtitles3D extends Fullscreen3D {
         }
         super.update(camera);
         this.canvas_ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        const txt_ctx = this.canvas_ctx as unknown as TextContext;
         for (const cue of this.active_cues) {
-            const lines = this.split(cue.text, this.max_width_px)
-                .reverse()
-                .map((text, index) => {
-                    const text_width = this.canvas_ctx.measureText(text).width;
-                    const bottom_margin_px = this.line_height_px
-                    const text_x = this.canvas.width / 2;
-                    const text_y = this.canvas.height - bottom_margin_px - (index + 0.5) * this.line_height_px;
-
-                    return {
-                        text,
-                        text_x,
-                        text_y,
-                        bg_x: text_x - text_width / 2 - this.background_padding_x_px,
-                        bg_y: text_y - this.line_height_px / 2,
-                        bg_w: text_width + this.background_padding_x_px * 2,
-                        bg_h: this.line_height_px,
-                    };
-                });
+            const box_x = (this.canvas.width - this.max_width_px) / 2;
+            const box_height = this.canvas.height - this.line_height_px;
+            const layout = layoutText(txt_ctx, cue.text, {
+                width: this.max_width_px,
+                height: box_height,
+                font: this.font,
+                fontSize: this.font_px,
+                lineHeight: this.line_height_px,
+                align: "center",
+                vAlign: "bottom",
+                overflow: "visible",
+            });
+            const lines_top = box_height - layout.height;
             this.canvas_ctx.fillStyle = "black";
-            for (const line of lines) {
+            layout.lines.forEach((line, index) => {
                 this.canvas_ctx.fillRect(
-                    line.bg_x,
-                    line.bg_y,
-                    line.bg_w,
-                    line.bg_h
+                    box_x + line.x - this.background_padding_x_px,
+                    lines_top + index * layout.lineHeight,
+                    line.width + this.background_padding_x_px * 2,
+                    layout.lineHeight,
                 );
-            }
-            this.canvas_ctx.fillStyle = "white";
-            for (const line of lines) {
-                this.canvas_ctx.fillText(line.text, line.text_x, line.text_y);
-            }
+            });
+            drawTextLayout(txt_ctx, layout, { x: box_x, y: 0, style: { fill: "white" } });
         }
         this.canvas_texture.needsUpdate = true;
         this.should_refresh = false;
